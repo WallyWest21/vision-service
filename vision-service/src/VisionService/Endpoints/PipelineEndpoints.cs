@@ -173,12 +173,13 @@ public static class PipelineEndpoints
 
             await Task.WhenAll(detectTask, captionTask, ocrTask);
 
+            var detections = await detectTask;
             return Results.Ok(new
             {
-                Detections = (await detectTask),
+                Detections = detections,
                 Caption = (await captionTask).Text,
                 ExtractedText = (await ocrTask).Text,
-                DetectionCount = (await detectTask).Count
+                DetectionCount = detections.Count
             });
         }
         catch (HttpRequestException ex)

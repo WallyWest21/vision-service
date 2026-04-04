@@ -16,6 +16,9 @@ defaults:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
     steps:
       - uses: actions/checkout@v4
 
@@ -53,6 +56,8 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     needs: build-and-test
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -72,6 +77,8 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -81,4 +88,5 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Format check
+        working-directory: vision-service
         run: dotnet format VisionService.sln --verify-no-changes --verbosity diagnostic

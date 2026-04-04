@@ -39,6 +39,10 @@ public class InProcessEventBus : IVisionEventBus
         _handlers.AddOrUpdate(
             typeof(TEvent),
             _ => [handler],
-            (_, list) => { list.Add(handler); return list; });
+            (_, list) =>
+            {
+                lock (list) { list.Add(handler); }
+                return list;
+            });
     }
 }
