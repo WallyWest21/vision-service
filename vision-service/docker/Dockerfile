@@ -5,7 +5,7 @@ WORKDIR /src
 COPY VisionService.sln ./
 COPY src/VisionService/VisionService.csproj src/VisionService/
 COPY src/VisionService.Tests/VisionService.Tests.csproj src/VisionService.Tests/
-RUN dotnet restore --locked-mode || dotnet restore
+RUN dotnet restore
 
 # Copy everything and build
 COPY . .

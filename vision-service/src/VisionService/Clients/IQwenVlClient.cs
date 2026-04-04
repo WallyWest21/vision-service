@@ -14,7 +14,7 @@ public interface IQwenVlClient
     /// <summary>Extracts text from an image via OCR.</summary>
     Task<VlResponse> OcrAsync(Stream image, CancellationToken ct = default);
 
-    /// <summary>Analyses an image with a custom system prompt.</summary>
+    /// <summary>Analyzes an image with a custom system prompt.</summary>
     Task<VlResponse> AnalyzeAsync(Stream image, string systemPrompt, CancellationToken ct = default);
 
     /// <summary>Compares two images and describes their differences.</summary>

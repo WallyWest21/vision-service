@@ -5,7 +5,7 @@ namespace VisionService.Events;
 /// <summary>Simple in-process event bus using concurrent dictionaries.</summary>
 public class InProcessEventBus : IVisionEventBus
 {
-    private readonly ConcurrentDictionary<Type, List<Delegate>> _handlers = new();
+    private readonly ConcurrentDictionary<Type, ImmutableHandlerList> _handlers = new();
     private readonly ILogger<InProcessEventBus> _logger;
 
     /// <summary>Initializes a new instance of <see cref="InProcessEventBus"/>.</summary>
@@ -17,9 +17,9 @@ public class InProcessEventBus : IVisionEventBus
     /// <inheritdoc/>
     public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken ct = default) where TEvent : class
     {
-        if (!_handlers.TryGetValue(typeof(TEvent), out var handlers)) return;
+        if (!_handlers.TryGetValue(typeof(TEvent), out var entry)) return;
 
-        foreach (var handler in handlers.ToList())
+        foreach (var handler in entry.Handlers)
         {
             try
             {
@@ -38,11 +38,24 @@ public class InProcessEventBus : IVisionEventBus
     {
         _handlers.AddOrUpdate(
             typeof(TEvent),
-            _ => [handler],
-            (_, list) =>
-            {
-                lock (list) { list.Add(handler); }
-                return list;
-            });
+            _ => new ImmutableHandlerList([handler]),
+            (_, existing) => existing.Add(handler));
+    }
+
+    private sealed class ImmutableHandlerList
+    {
+        private readonly Delegate[] _handlers;
+
+        public ImmutableHandlerList(Delegate[] handlers) => _handlers = handlers;
+
+        public IEnumerable<Delegate> Handlers => _handlers;
+
+        public ImmutableHandlerList Add(Delegate handler)
+        {
+            var newHandlers = new Delegate[_handlers.Length + 1];
+            _handlers.CopyTo(newHandlers, 0);
+            newHandlers[_handlers.Length] = handler;
+            return new ImmutableHandlerList(newHandlers);
+        }
     }
 }
