@@ -1,0 +1,33 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy solution and project files first for layer caching
+COPY VisionService.sln ./
+COPY src/VisionService/VisionService.csproj src/VisionService/
+COPY src/VisionService.Tests/VisionService.Tests.csproj src/VisionService.Tests/
+RUN dotnet restore
+
+# Copy everything and build
+COPY . .
+RUN dotnet publish src/VisionService/VisionService.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser -d /app appuser
+RUN mkdir -p /data/images && chown -R appuser:appuser /data /app
+
+COPY --from=build /app/publish .
+RUN chown -R appuser:appuser /app
+
+USER appuser
+EXPOSE 5100
+
+ENTRYPOINT ["dotnet", "VisionService.dll"]

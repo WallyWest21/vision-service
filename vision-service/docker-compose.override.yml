@@ -1,0 +1,19 @@
+version: "3.9"
+
+# Local dev overrides — hot reload, debug ports, relaxed limits
+services:
+  vision-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: build
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5100
+      - DOTNET_USE_POLLING_FILE_WATCHER=true
+    volumes:
+      - ./src/VisionService:/src/src/VisionService
+      - ./data/images:/data/images
+    ports:
+      - "5100:5100"
+    command: ["dotnet", "watch", "run", "--project", "/src/src/VisionService/VisionService.csproj"]
