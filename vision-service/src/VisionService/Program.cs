@@ -54,9 +54,11 @@ builder.Services.AddResponseCompression(opts =>
 var app = builder.Build();
 
 // Middleware pipeline
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseResponseCompression();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<RateLimitMiddleware>();
 app.UseMiddleware<ApiKeyMiddleware>();
 
 app.UseSwagger();
@@ -95,6 +97,10 @@ app.MapPipelineEndpoints();
 
 // WebSocket streaming
 app.MapWebSocketEndpoints();
+
+// Admin and playground
+app.MapAdminEndpoints();
+app.MapPlaygroundEndpoints();
 
 app.Run();
 
