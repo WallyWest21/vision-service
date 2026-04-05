@@ -120,6 +120,7 @@ jobs:
               repo: context.repo.repo,
               issue_number: issueNumber,
               body: expandedBody,
+              assignees: ['copilot'],
             });
 
             // Ensure the 'copilot' label exists, then apply it
