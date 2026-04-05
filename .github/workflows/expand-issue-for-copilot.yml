@@ -1,0 +1,154 @@
+name: Expand Issue for Copilot
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  expand-and-submit:
+    if: github.event.label.name == 'expand-for-copilot'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Expand issue description and assign to Copilot
+        uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        with:
+          script: |
+            const fs = require('fs');
+            const issueNumber = parseInt(process.env.ISSUE_NUMBER, 10);
+            const originalBody = process.env.ISSUE_BODY || '*(no description provided)*';
+
+            // Skip if already expanded
+            if (originalBody.includes('<!-- copilot-expanded -->')) {
+              console.log('Issue already expanded, skipping.');
+              return;
+            }
+
+            let servicePlan = '';
+            try {
+              servicePlan = fs.readFileSync('vision-service/docs/service-plan.md', 'utf8');
+            } catch (err) {
+              console.warn('Could not read service-plan.md:', err.message);
+              servicePlan = '*(service-plan.md not found)*';
+            }
+
+            let instructions = '';
+            try {
+              instructions = fs.readFileSync(
+                'vision-service/.github/copilot-instructions.md', 'utf8');
+            } catch (err) {
+              console.warn('Could not read copilot-instructions.md:', err.message);
+              instructions = '*(copilot-instructions.md not found)*';
+            }
+
+            const separator = '---';
+            const sections = [
+              '<!-- copilot-expanded -->',
+              '## Original Request',
+              '',
+              originalBody,
+              '',
+              separator,
+              '',
+              '## Repository Context for Copilot',
+              '',
+              '### Architecture & File Layout',
+              '',
+              '```',
+              'src/',
+              '  VisionService/',
+              '    Clients/       # Typed HTTP clients (IYoloClient, IQwenVlClient)',
+              '    Configuration/ # Options classes (YoloOptions, QwenVlOptions, StorageOptions, AuthOptions, RateLimitOptions)',
+              '    Endpoints/     # Minimal API groups (MapYoloEndpoints, MapQwenVlEndpoints, MapPipelineEndpoints, MapWebSocketEndpoints)',
+              '    Events/        # In-process event bus (IVisionEventBus, InProcessEventBus)',
+              '    Jobs/          # Background services (ImageCleanupJob, ModelHealthCheckJob)',
+              '    Middleware/    # Custom middleware (CorrelationIdMiddleware, SecurityHeadersMiddleware, ApiKeyMiddleware)',
+              '    Models/        # DTOs (Detection, BoundingBox, Keypoint, Segmentation, VlResponse)',
+              '    Services/      # Business logic (IImageService, ImageService)',
+              '    Extensions/    # DI registration (ServiceCollectionExtensions)',
+              '    Program.cs     # Entry point',
+              '  VisionService.Tests/',
+              '    Clients/       # Unit tests for HTTP clients',
+              '    Configuration/ # Options validation tests',
+              '    Endpoints/     # Integration tests (WebApplicationFactory<Program>)',
+              '    Events/        # Event bus tests',
+              '    Services/      # ImageService unit tests',
+              '```',
+              '',
+              '### Coding Conventions',
+              '',
+              instructions,
+              '',
+              '### Build and Test Commands',
+              '',
+              '```bash',
+              '# From repo root:',
+              'cd vision-service',
+              'dotnet build VisionService.sln --configuration Release',
+              'dotnet test VisionService.sln --configuration Release',
+              '```',
+              '',
+              '### Key Integration Points',
+              '',
+              '- All DI registrations: `AddVisionServices()` in `ServiceCollectionExtensions.cs`',
+              '- Endpoints mapped via: `MapYoloEndpoints()`, `MapQwenVlEndpoints()`, `MapPipelineEndpoints()`, `MapWebSocketEndpoints()`',
+              '- YOLO backend: `http://yolo-api:7860` — `/detect`, `/segment`, `/pose`, `/classify`',
+              '- Qwen-VL backend: `http://qwen-vl:8000` — `/v1/chat/completions` (OpenAI-compatible)',
+              '- API key auth via `X-Api-Key` header; exempt paths: `/health`, `/swagger`, `/metrics`',
+              '- Correlation ID propagated via `X-Correlation-Id` header',
+              '',
+              '<details>',
+              '<summary>Full service plan (docs/service-plan.md)</summary>',
+              '',
+              servicePlan,
+              '',
+              '</details>',
+            ];
+
+            const expandedBody = sections.join('\n');
+
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: expandedBody,
+            });
+
+            // Ensure the 'copilot' label exists, then apply it
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'copilot',
+              });
+            } catch (labelErr) {
+              if (labelErr.status === 404) {
+                // Label does not exist yet — create it
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: 'copilot',
+                  color: '0075ca',
+                  description: 'Assigned to GitHub Copilot coding agent',
+                });
+              } else {
+                console.warn('Unexpected error checking copilot label:', labelErr.message);
+              }
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              labels: ['copilot'],
+            });
+
+            console.log('Issue #' + issueNumber + ' expanded and submitted to Copilot.');
