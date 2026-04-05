@@ -50,20 +50,30 @@ public static class YoloEndpoints
         IFormFile file,
         IYoloClient yolo,
         IImageService imageService,
+        IResponseCacheService cache,
+        HttpContext httpContext,
         [FromQuery] float confidence = 0.5f,
         CancellationToken ct = default)
     {
         try
         {
             ValidateConfidence(confidence);
-            await using var stream = file.OpenReadStream();
-            var detections = await yolo.DetectAsync(stream, confidence, ct);
-            return Results.Ok(new DetectionResponse
+            var imageBytes = await ReadBytesAsync(file, ct);
+            var cacheKey = cache.ComputeKey(imageBytes, "detect", confidence.ToString("F2"));
+            SetETagHeader(httpContext, cacheKey);
+
+            var result = await cache.GetOrCreateAsync(cacheKey, async () =>
             {
-                Detections = detections,
-                ProcessingTimeMs = 0,
-                Model = "YOLOv8"
+                await using var stream = new MemoryStream(imageBytes);
+                var detections = await yolo.DetectAsync(stream, confidence, ct);
+                return new DetectionResponse
+                {
+                    Detections = detections,
+                    ProcessingTimeMs = 0,
+                    Model = "YOLOv8"
+                };
             });
+            return Results.Ok(result);
         }
         catch (ArgumentException ex)
         {
@@ -78,6 +88,7 @@ public static class YoloEndpoints
     private static async Task<IResult> DetectBatchAsync(
         IEnumerable<IFormFile> files,
         IYoloClient yolo,
+        IResponseCacheService cache,
         [FromQuery] float confidence = 0.5f,
         CancellationToken ct = default)
     {
@@ -86,9 +97,14 @@ public static class YoloEndpoints
             ValidateConfidence(confidence);
             var tasks = files.Select(async f =>
             {
-                await using var stream = f.OpenReadStream();
-                var detections = await yolo.DetectAsync(stream, confidence, ct);
-                return new { FileName = f.FileName, Detections = detections };
+                var imageBytes = await ReadBytesAsync(f, ct);
+                var cacheKey = cache.ComputeKey(imageBytes, "detect", confidence.ToString("F2"));
+                return await cache.GetOrCreateAsync(cacheKey, async () =>
+                {
+                    await using var stream = new MemoryStream(imageBytes);
+                    var detections = await yolo.DetectAsync(stream, confidence, ct);
+                    return new { FileName = f.FileName, Detections = detections };
+                });
             });
             var results = await Task.WhenAll(tasks);
             return Results.Ok(results);
@@ -106,19 +122,29 @@ public static class YoloEndpoints
     private static async Task<IResult> SegmentAsync(
         IFormFile file,
         IYoloClient yolo,
+        IResponseCacheService cache,
+        HttpContext httpContext,
         [FromQuery] float confidence = 0.5f,
         CancellationToken ct = default)
     {
         try
         {
             ValidateConfidence(confidence);
-            await using var stream = file.OpenReadStream();
-            var segmentations = await yolo.SegmentAsync(stream, confidence, ct);
-            return Results.Ok(new SegmentationResponse
+            var imageBytes = await ReadBytesAsync(file, ct);
+            var cacheKey = cache.ComputeKey(imageBytes, "segment", confidence.ToString("F2"));
+            SetETagHeader(httpContext, cacheKey);
+
+            var result = await cache.GetOrCreateAsync(cacheKey, async () =>
             {
-                Segmentations = segmentations,
-                Model = "YOLOv8-Seg"
+                await using var stream = new MemoryStream(imageBytes);
+                var segmentations = await yolo.SegmentAsync(stream, confidence, ct);
+                return new SegmentationResponse
+                {
+                    Segmentations = segmentations,
+                    Model = "YOLOv8-Seg"
+                };
             });
+            return Results.Ok(result);
         }
         catch (ArgumentException ex)
         {
@@ -133,19 +159,29 @@ public static class YoloEndpoints
     private static async Task<IResult> ClassifyAsync(
         IFormFile file,
         IYoloClient yolo,
+        IResponseCacheService cache,
+        HttpContext httpContext,
         [FromQuery] int topN = 5,
         CancellationToken ct = default)
     {
         try
         {
             if (topN < 1 || topN > 100) return Results.Problem("topN must be between 1 and 100", statusCode: 400);
-            await using var stream = file.OpenReadStream();
-            var classifications = await yolo.ClassifyAsync(stream, topN, ct);
-            return Results.Ok(new ClassificationResponse
+            var imageBytes = await ReadBytesAsync(file, ct);
+            var cacheKey = cache.ComputeKey(imageBytes, "classify", topN.ToString());
+            SetETagHeader(httpContext, cacheKey);
+
+            var result = await cache.GetOrCreateAsync(cacheKey, async () =>
             {
-                Classifications = classifications,
-                Model = "YOLOv8-Cls"
+                await using var stream = new MemoryStream(imageBytes);
+                var classifications = await yolo.ClassifyAsync(stream, topN, ct);
+                return new ClassificationResponse
+                {
+                    Classifications = classifications,
+                    Model = "YOLOv8-Cls"
+                };
             });
+            return Results.Ok(result);
         }
         catch (HttpRequestException ex)
         {
@@ -156,19 +192,29 @@ public static class YoloEndpoints
     private static async Task<IResult> PoseAsync(
         IFormFile file,
         IYoloClient yolo,
+        IResponseCacheService cache,
+        HttpContext httpContext,
         [FromQuery] float confidence = 0.5f,
         CancellationToken ct = default)
     {
         try
         {
             ValidateConfidence(confidence);
-            await using var stream = file.OpenReadStream();
-            var poses = await yolo.PoseAsync(stream, confidence, ct);
-            return Results.Ok(new PoseResponse
+            var imageBytes = await ReadBytesAsync(file, ct);
+            var cacheKey = cache.ComputeKey(imageBytes, "pose", confidence.ToString("F2"));
+            SetETagHeader(httpContext, cacheKey);
+
+            var result = await cache.GetOrCreateAsync(cacheKey, async () =>
             {
-                Poses = poses,
-                Model = "YOLOv8-Pose"
+                await using var stream = new MemoryStream(imageBytes);
+                var poses = await yolo.PoseAsync(stream, confidence, ct);
+                return new PoseResponse
+                {
+                    Poses = poses,
+                    Model = "YOLOv8-Pose"
+                };
             });
+            return Results.Ok(result);
         }
         catch (ArgumentException ex)
         {
@@ -184,6 +230,19 @@ public static class YoloEndpoints
     {
         if (confidence < 0f || confidence > 1f)
             throw new ArgumentException("confidence must be between 0.0 and 1.0");
+    }
+
+    private static async Task<byte[]> ReadBytesAsync(IFormFile file, CancellationToken ct)
+    {
+        await using var stream = file.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms, ct);
+        return ms.ToArray();
+    }
+
+    private static void SetETagHeader(HttpContext httpContext, string cacheKey)
+    {
+        httpContext.Response.Headers.ETag = $"\"{cacheKey}\"";
     }
 }
 
