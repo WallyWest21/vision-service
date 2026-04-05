@@ -1,4 +1,5 @@
 using Serilog;
+using VisionService.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,9 @@ builder.Host.UseSerilog((context, config) => config
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Vision services (options registration)
+builder.Services.AddVisionServices(builder.Configuration);
 
 var app = builder.Build();
 
