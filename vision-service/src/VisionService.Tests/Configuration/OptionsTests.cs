@@ -62,4 +62,38 @@ public class OptionsTests
         opts.TimeoutSeconds.Should().Be(60);
         opts.MaxRetries.Should().Be(5);
     }
+
+    [Fact]
+    public void CacheOptions_DefaultValues_AreValid()
+    {
+        var opts = new CacheOptions();
+        opts.Enabled.Should().BeTrue();
+        opts.DefaultTtlSeconds.Should().BeGreaterThan(0);
+        opts.MaxItems.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void CacheOptions_BindFromConfiguration_Succeeds()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Cache:Enabled"] = "false",
+                ["Cache:DefaultTtlSeconds"] = "600",
+                ["Cache:MaxItems"] = "500"
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.AddOptions<CacheOptions>()
+            .Bind(config.GetSection(CacheOptions.SectionName))
+            .ValidateDataAnnotations();
+
+        var sp = services.BuildServiceProvider();
+        var opts = sp.GetRequiredService<IOptions<CacheOptions>>().Value;
+
+        opts.Enabled.Should().BeFalse();
+        opts.DefaultTtlSeconds.Should().Be(600);
+        opts.MaxItems.Should().Be(500);
+    }
 }

@@ -1,6 +1,8 @@
 using System.Net;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using VisionService.Configuration;
 using Xunit;
 
 namespace VisionService.Tests.Middleware;
@@ -81,5 +83,34 @@ public class MiddlewareTests : IClassFixture<WebApplicationFactory<Program>>
             var response = await client.GetAsync("/health");
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
+    }
+
+    [Fact]
+    public async Task RateLimit_ExceededOnNonExemptPath_Returns429()
+    {
+        // Configure a factory with a very low rate limit (1 request/minute) so we can
+        // trigger a 429 with a small number of requests in the test.
+        var lowLimitFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.PostConfigure<RateLimitOptions>(opts =>
+                {
+                    opts.RequestsPerMinute = 1;
+                    opts.BurstSize = 1;
+                });
+            });
+        });
+
+        var client = lowLimitFactory.CreateClient();
+
+        // First request should succeed (non-exempt path /api/v1/detect returns 415 for GET,
+        // but the rate limit middleware runs before the endpoint; any non-exempt path works)
+        var first = await client.GetAsync("/api/v1/detect");
+        first.StatusCode.Should().NotBe(HttpStatusCode.TooManyRequests);
+
+        // Second request should be rate-limited
+        var second = await client.GetAsync("/api/v1/detect");
+        second.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
     }
 }

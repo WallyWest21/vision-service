@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using VisionService.Clients;
 using VisionService.Configuration;
@@ -35,11 +36,16 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<CacheOptions>()
+            .Bind(configuration.GetSection(CacheOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddYoloClient(configuration);
         services.AddQwenVlClient(configuration);
         services.AddImageService();
         services.AddVisionEventBus();
-        services.AddMemoryCache();
+        services.AddResponseCacheService();
 
         return services;
     }
@@ -75,6 +81,19 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddVisionEventBus(this IServiceCollection services)
     {
         services.AddSingleton<IVisionEventBus, InProcessEventBus>();
+        return services;
+    }
+
+    private static IServiceCollection AddResponseCacheService(this IServiceCollection services)
+    {
+        services.AddMemoryCache();
+        // Configure SizeLimit after options are registered so CacheOptions.MaxItems is respected
+        services.AddOptions<MemoryCacheOptions>()
+            .Configure<IOptions<CacheOptions>>((memOpts, cacheOpts) =>
+            {
+                memOpts.SizeLimit = cacheOpts.Value.MaxItems;
+            });
+        services.AddSingleton<IResponseCacheService, ResponseCacheService>();
         return services;
     }
 }

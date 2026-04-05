@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using VisionService.Clients;
+using VisionService.Services;
 
 namespace VisionService.Endpoints;
 
@@ -54,6 +55,8 @@ public static class QwenVlEndpoints
         IFormFile file,
         [FromForm] string question,
         IQwenVlClient qwen,
+        IResponseCacheService cache,
+        HttpContext httpContext,
         CancellationToken ct = default)
     {
         try
@@ -61,8 +64,15 @@ public static class QwenVlEndpoints
             if (string.IsNullOrWhiteSpace(question))
                 return Results.Problem("question is required", statusCode: 400);
 
-            await using var stream = file.OpenReadStream();
-            var response = await qwen.AskAsync(stream, question, ct);
+            var imageBytes = await ReadBytesAsync(file, ct);
+            var cacheKey = cache.ComputeKey(imageBytes, "ask", question);
+            SetETagHeader(httpContext, cacheKey);
+
+            var response = await cache.GetOrCreateAsync(cacheKey, async () =>
+            {
+                await using var stream = new MemoryStream(imageBytes);
+                return await qwen.AskAsync(stream, question, ct);
+            });
             return Results.Ok(response);
         }
         catch (HttpRequestException ex)
@@ -74,12 +84,21 @@ public static class QwenVlEndpoints
     private static async Task<IResult> CaptionAsync(
         IFormFile file,
         IQwenVlClient qwen,
+        IResponseCacheService cache,
+        HttpContext httpContext,
         CancellationToken ct = default)
     {
         try
         {
-            await using var stream = file.OpenReadStream();
-            var response = await qwen.CaptionAsync(stream, ct);
+            var imageBytes = await ReadBytesAsync(file, ct);
+            var cacheKey = cache.ComputeKey(imageBytes, "caption");
+            SetETagHeader(httpContext, cacheKey);
+
+            var response = await cache.GetOrCreateAsync(cacheKey, async () =>
+            {
+                await using var stream = new MemoryStream(imageBytes);
+                return await qwen.CaptionAsync(stream, ct);
+            });
             return Results.Ok(response);
         }
         catch (HttpRequestException ex)
@@ -91,12 +110,21 @@ public static class QwenVlEndpoints
     private static async Task<IResult> OcrAsync(
         IFormFile file,
         IQwenVlClient qwen,
+        IResponseCacheService cache,
+        HttpContext httpContext,
         CancellationToken ct = default)
     {
         try
         {
-            await using var stream = file.OpenReadStream();
-            var response = await qwen.OcrAsync(stream, ct);
+            var imageBytes = await ReadBytesAsync(file, ct);
+            var cacheKey = cache.ComputeKey(imageBytes, "ocr");
+            SetETagHeader(httpContext, cacheKey);
+
+            var response = await cache.GetOrCreateAsync(cacheKey, async () =>
+            {
+                await using var stream = new MemoryStream(imageBytes);
+                return await qwen.OcrAsync(stream, ct);
+            });
             return Results.Ok(response);
         }
         catch (HttpRequestException ex)
@@ -109,6 +137,8 @@ public static class QwenVlEndpoints
         IFormFile file,
         [FromForm] string systemPrompt,
         IQwenVlClient qwen,
+        IResponseCacheService cache,
+        HttpContext httpContext,
         CancellationToken ct = default)
     {
         try
@@ -116,8 +146,15 @@ public static class QwenVlEndpoints
             if (string.IsNullOrWhiteSpace(systemPrompt))
                 return Results.Problem("systemPrompt is required", statusCode: 400);
 
-            await using var stream = file.OpenReadStream();
-            var response = await qwen.AnalyzeAsync(stream, systemPrompt, ct);
+            var imageBytes = await ReadBytesAsync(file, ct);
+            var cacheKey = cache.ComputeKey(imageBytes, "analyze", systemPrompt);
+            SetETagHeader(httpContext, cacheKey);
+
+            var response = await cache.GetOrCreateAsync(cacheKey, async () =>
+            {
+                await using var stream = new MemoryStream(imageBytes);
+                return await qwen.AnalyzeAsync(stream, systemPrompt, ct);
+            });
             return Results.Ok(response);
         }
         catch (HttpRequestException ex)
@@ -130,13 +167,27 @@ public static class QwenVlEndpoints
         IFormFile file1,
         IFormFile file2,
         IQwenVlClient qwen,
+        IResponseCacheService cache,
+        HttpContext httpContext,
         CancellationToken ct = default)
     {
         try
         {
-            await using var stream1 = file1.OpenReadStream();
-            await using var stream2 = file2.OpenReadStream();
-            var response = await qwen.CompareAsync(stream1, stream2, ct);
+            var bytes1 = await ReadBytesAsync(file1, ct);
+            var bytes2 = await ReadBytesAsync(file2, ct);
+            // Combine bytes of both images for a deterministic cache key
+            var combined = new byte[bytes1.Length + bytes2.Length];
+            Buffer.BlockCopy(bytes1, 0, combined, 0, bytes1.Length);
+            Buffer.BlockCopy(bytes2, 0, combined, bytes1.Length, bytes2.Length);
+            var cacheKey = cache.ComputeKey(combined, "compare");
+            SetETagHeader(httpContext, cacheKey);
+
+            var response = await cache.GetOrCreateAsync(cacheKey, async () =>
+            {
+                await using var stream1 = new MemoryStream(bytes1);
+                await using var stream2 = new MemoryStream(bytes2);
+                return await qwen.CompareAsync(stream1, stream2, ct);
+            });
             return Results.Ok(response);
         }
         catch (HttpRequestException ex)
@@ -148,19 +199,41 @@ public static class QwenVlEndpoints
     private static async Task<IResult> DescribeDetailedAsync(
         IFormFile file,
         IQwenVlClient qwen,
+        IResponseCacheService cache,
+        HttpContext httpContext,
         CancellationToken ct = default)
     {
         try
         {
-            await using var stream = file.OpenReadStream();
-            var response = await qwen.AnalyzeAsync(stream,
-                "You are a detailed scene analyst. Provide a comprehensive, structured description including objects, spatial relationships, colors, lighting, mood, and any text visible in the image.",
-                ct);
+            var imageBytes = await ReadBytesAsync(file, ct);
+            var cacheKey = cache.ComputeKey(imageBytes, "describe-detailed");
+            SetETagHeader(httpContext, cacheKey);
+
+            var response = await cache.GetOrCreateAsync(cacheKey, async () =>
+            {
+                await using var stream = new MemoryStream(imageBytes);
+                return await qwen.AnalyzeAsync(stream,
+                    "You are a detailed scene analyst. Provide a comprehensive, structured description including objects, spatial relationships, colors, lighting, mood, and any text visible in the image.",
+                    ct);
+            });
             return Results.Ok(response);
         }
         catch (HttpRequestException ex)
         {
             return Results.Problem("Qwen-VL backend unavailable: " + ex.Message, statusCode: 503);
         }
+    }
+
+    private static async Task<byte[]> ReadBytesAsync(IFormFile file, CancellationToken ct)
+    {
+        await using var stream = file.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms, ct);
+        return ms.ToArray();
+    }
+
+    private static void SetETagHeader(HttpContext httpContext, string cacheKey)
+    {
+        httpContext.Response.Headers.ETag = $"\"{cacheKey}\"";
     }
 }
