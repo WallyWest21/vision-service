@@ -1,4 +1,10 @@
+using Microsoft.AspNetCore.ResponseCompression;
+using Prometheus;
 using Serilog;
+using VisionService.Endpoints;
+using VisionService.Extensions;
+using VisionService.Jobs;
+using VisionService.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,16 +12,66 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, config) => config
     .ReadFrom.Configuration(context.Configuration)
     .WriteTo.Console()
-    .Enrich.FromLogContext());
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Service", "VisionService"));
 
-// Swagger
+// Swagger / OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "VisionService API", Version = "v1" });
+    c.AddSecurityDefinition("ApiKey", new()
+    {
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Name = "X-Api-Key",
+        Description = "API key authentication"
+    });
+    c.AddSecurityRequirement(new()
+    {
+        {
+            new() { Reference = new() { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "ApiKey" } },
+            Array.Empty<string>()
+        }
+    });
+});
+
+// Vision services (options, clients, image service, event bus)
+builder.Services.AddVisionServices(builder.Configuration);
+
+// Background jobs
+builder.Services.AddHostedService<ImageCleanupJob>();
+builder.Services.AddHostedService<ModelHealthCheckJob>();
+
+// Response compression
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.EnableForHttps = true;
+    opts.Providers.Add<GzipCompressionProvider>();
+    opts.Providers.Add<BrotliCompressionProvider>();
+});
 
 var app = builder.Build();
 
+// Middleware pipeline
+app.UseResponseCompression();
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<ApiKeyMiddleware>();
+
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "VisionService v1");
+    c.RoutePrefix = "swagger";
+});
+
+// WebSockets
+app.UseWebSockets();
+
+// Prometheus metrics
+app.UseMetricServer();
+app.UseHttpMetrics();
 
 // Health check
 app.MapGet("/health", () => Results.Ok(new
@@ -28,7 +84,19 @@ app.MapGet("/health", () => Results.Ok(new
 .WithName("HealthCheck")
 .WithOpenApi();
 
+// YOLO endpoints
+app.MapYoloEndpoints();
+
+// Qwen-VL endpoints
+app.MapQwenVlEndpoints();
+
+// Pipeline endpoints
+app.MapPipelineEndpoints();
+
+// WebSocket streaming
+app.MapWebSocketEndpoints();
+
 app.Run();
 
-// Make Program accessible for integration tests
+/// <summary>Entry point for integration tests.</summary>
 public partial class Program { }
