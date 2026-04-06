@@ -1,11 +1,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy solution and project files first for layer caching
-COPY VisionService.sln ./
+# Copy only the server-side project files for layer caching.
+# The solution file is intentionally excluded — it references the MAUI client
+# which is not part of the Docker build context.
 COPY src/VisionService/VisionService.csproj src/VisionService/
 COPY src/VisionService.Tests/VisionService.Tests.csproj src/VisionService.Tests/
-RUN dotnet restore
+RUN dotnet restore src/VisionService/VisionService.csproj
 
 # Copy everything and build
 COPY . .

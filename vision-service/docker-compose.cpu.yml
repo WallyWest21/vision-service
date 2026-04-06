@@ -1,0 +1,79 @@
+# CPU-only override — use when no NVIDIA GPU is available.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.cpu.yml up --build
+#
+# What this changes:
+#   • yolo-api  — removes GPU reservation (YOLOv8 falls back to CPU)
+#   • qwen-vl   — replaces the full vLLM image with a lightweight stub that
+#                 returns mock responses so vision-service starts and is testable
+#                 without a GPU or a HuggingFace model download.
+
+services:
+  vision-service:
+    # Relax depends_on so the service starts even if AI backends are slow.
+    depends_on:
+      yolo-api:
+        condition: service_healthy
+      qwen-vl:
+        condition: service_healthy
+
+  yolo-api:
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        # No GPU reservation — ultralytics automatically uses CPU.
+
+  qwen-vl:
+    # Replace the full vLLM image with a minimal OpenAI-API-compatible stub.
+    image: python:3.11-slim
+    container_name: qwen-vl
+    ports:
+      - "8001:8000"
+    volumes: []
+    command: >
+      bash -c "pip install --quiet fastapi uvicorn &&
+      python -c \"
+import json, time
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+import uvicorn
+
+app = FastAPI()
+
+@app.get('/health')
+def health():
+    return {'status': 'ok'}
+
+@app.post('/v1/chat/completions')
+async def chat(request: Request):
+    body = await request.json()
+    return JSONResponse({
+        'id': 'stub-0',
+        'object': 'chat.completion',
+        'created': int(time.time()),
+        'model': 'stub',
+        'choices': [{
+            'index': 0,
+            'message': {'role': 'assistant', 'content': '[CPU stub] Image analysis not available without GPU.'},
+            'finish_reason': 'stop'
+        }],
+        'usage': {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
+    })
+
+uvicorn.run(app, host='0.0.0.0', port=8000)
+\""
+    environment: []
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M

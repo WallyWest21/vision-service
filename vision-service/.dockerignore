@@ -1,0 +1,19 @@
+# Exclude the MAUI client — it's not part of the server Docker build.
+maui-client/
+
+# Exclude test output and build artifacts
+**/bin/
+**/obj/
+**/.vs/
+**/TestResults/
+
+# Exclude compose overrides and local config
+docker-compose.override.yml
+docker-compose.cpu.yml
+docker-compose.prod.yml
+
+# Exclude docs and git metadata
+docs/
+.git/
+.github/
+*.md

@@ -1,6 +1,5 @@
-version: "3.9"
-
 # Local dev overrides — hot reload, debug ports, relaxed limits
+# GPU reservations are removed from AI backends so dev works without NVIDIA GPU.
 services:
   vision-service:
     build:
@@ -17,3 +16,26 @@ services:
     ports:
       - "5100:5100"
     command: ["dotnet", "watch", "run", "--project", "/src/src/VisionService/VisionService.csproj"]
+    # In dev, only wait for services to start (not be healthy) so missing GPU doesn't block.
+    depends_on:
+      yolo-api:
+        condition: service_started
+      qwen-vl:
+        condition: service_started
+
+  # Override yolo-api to remove the NVIDIA GPU requirement in local dev.
+  yolo-api:
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+
+  # Override qwen-vl to remove the NVIDIA GPU requirement in local dev.
+  # Note: running a 7B VL model on CPU is slow; use docker-compose.cpu.yml for a stub.
+  qwen-vl:
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 8G

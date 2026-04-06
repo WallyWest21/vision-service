@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   vision-service:
     image: vision-service:latest
