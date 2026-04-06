@@ -16,8 +16,8 @@ public class VisionApiClient
     private static readonly JsonSerializerOptions _json =
         new(JsonSerializerDefaults.Web);
 
-    /// <summary>Base URL of the running VisionService, e.g. http://localhost:5100.</summary>
-    public string BaseAddress { get; set; } = "http://localhost:5100";
+    /// <summary>Base URL of the running VisionService, e.g. http://100.108.155.28:5100.</summary>
+    public string BaseAddress { get; set; } = "http://100.108.155.28:5100";
 
     /// <summary>API key sent in the X-Api-Key header (leave empty to skip).</summary>
     public string ApiKey { get; set; } = string.Empty;

@@ -22,9 +22,17 @@ public static class MauiProgram
         builder.Services.AddSingleton<VisionApiClient>(sp =>
         {
             var factory = sp.GetRequiredService<IHttpClientFactory>();
+            const string defaultUrl = "http://100.108.155.28:5100";
+            var savedUrl = Preferences.Default.Get("ServiceUrl", defaultUrl);
+            // Migrate any previously saved localhost URL to the real host
+            if (savedUrl.Contains("localhost", StringComparison.OrdinalIgnoreCase))
+            {
+                savedUrl = defaultUrl;
+                Preferences.Default.Set("ServiceUrl", savedUrl);
+            }
             var client = new VisionApiClient(factory)
             {
-                BaseAddress = Preferences.Default.Get("ServiceUrl", "http://localhost:5100"),
+                BaseAddress = savedUrl,
                 ApiKey = Preferences.Default.Get("ApiKey", string.Empty)
             };
             return client;

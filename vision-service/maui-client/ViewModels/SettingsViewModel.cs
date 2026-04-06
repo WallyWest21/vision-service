@@ -9,7 +9,7 @@ public partial class SettingsViewModel : BaseViewModel
 {
     private readonly VisionApiClient _api;
 
-    [ObservableProperty] private string _serviceUrl = "http://localhost:5100";
+    [ObservableProperty] private string _serviceUrl = "http://100.108.155.28:5100";
     [ObservableProperty] private string _apiKey = string.Empty;
 
     public SettingsViewModel(VisionApiClient api)
@@ -33,7 +33,7 @@ public partial class SettingsViewModel : BaseViewModel
     [RelayCommand]
     private void Load()
     {
-        ServiceUrl = Preferences.Default.Get("ServiceUrl", "http://localhost:5100");
+        ServiceUrl = Preferences.Default.Get("ServiceUrl", "http://100.108.155.28:5100");
         ApiKey = Preferences.Default.Get("ApiKey", string.Empty);
         _api.BaseAddress = ServiceUrl;
         _api.ApiKey = ApiKey;
