@@ -55,6 +55,7 @@ services:
       --trust-remote-code
       --max-model-len 4096
       --gpu-memory-utilization 0.85
+      --dtype auto
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
