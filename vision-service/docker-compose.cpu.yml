@@ -4,7 +4,8 @@
 #   docker compose -f docker-compose.yml -f docker-compose.cpu.yml up --build
 #
 # What this changes:
-#   • yolo-api  — removes GPU reservation (YOLOv8 falls back to CPU)
+#   • yolo-api  — replaces the full ultralytics image with a lightweight stub
+#                 that returns mock YOLO responses (no model download required)
 #   • qwen-vl   — replaces the full vLLM image with a lightweight stub that
 #                 returns mock responses so vision-service starts and is testable
 #                 without a GPU or a HuggingFace model download.
@@ -19,12 +20,27 @@ services:
         condition: service_healthy
 
   yolo-api:
+    # Replace the full ultralytics image with a minimal stub.
+    build:
+      context: ./docker/yolo
+      dockerfile: Dockerfile.stub-yolo
+    image: yolo-api-stub
+    container_name: yolo-api
+    ports:
+      - "7861:7860"
+    volumes: []
+    environment: []
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:7860/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     deploy:
       resources:
         limits:
-          cpus: "2.0"
-          memory: 2G
-        # No GPU reservation — ultralytics automatically uses CPU.
+          cpus: "1.0"
+          memory: 256M
 
   qwen-vl:
     # Replace the full vLLM image with a minimal OpenAI-API-compatible stub.
@@ -37,6 +53,7 @@ services:
       - "8001:8000"
     volumes: []
     environment: []
+    command: []
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
       interval: 10s
