@@ -58,6 +58,8 @@ public class VisionApiClient
                         detail = d.GetString() ?? detail;
                     else if (doc.RootElement.TryGetProperty("title", out var t) && t.ValueKind == System.Text.Json.JsonValueKind.String)
                         detail = t.GetString() ?? detail;
+                    else if (doc.RootElement.TryGetProperty("Error", out var e) && e.ValueKind == System.Text.Json.JsonValueKind.String)
+                        detail = e.GetString() ?? detail;
                 }
             }
             catch { /* keep status-line detail */ }
