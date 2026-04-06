@@ -3,6 +3,9 @@ using MauiClient.Services;
 using MauiClient.ViewModels;
 using MauiClient.Views;
 using Microsoft.Extensions.Logging;
+#if WINDOWS
+using MauiClient.WinUI;
+#endif
 
 namespace MauiClient;
 
@@ -38,6 +41,14 @@ public static class MauiProgram
             return client;
         });
 
+        // Stream reader (singleton — stateless factory wrapper)
+        builder.Services.AddSingleton<MjpegStreamReader>();
+
+        // Local camera service (platform-specific)
+#if WINDOWS
+        builder.Services.AddSingleton<ILocalCameraService, LocalCameraService>();
+#endif
+
         // ViewModels
         builder.Services.AddTransient<HealthViewModel>();
         builder.Services.AddTransient<YoloViewModel>();
@@ -45,6 +56,7 @@ public static class MauiProgram
         builder.Services.AddTransient<PipelineViewModel>();
         builder.Services.AddTransient<AdminViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<LiveFeedViewModel>();
 
         // Views
         builder.Services.AddTransient<HealthPage>();
@@ -53,6 +65,7 @@ public static class MauiProgram
         builder.Services.AddTransient<PipelinePage>();
         builder.Services.AddTransient<AdminPage>();
         builder.Services.AddTransient<SettingsPage>();
+        builder.Services.AddTransient<LiveFeedPage>();
 
         // Shell
         builder.Services.AddSingleton<AppShell>();

@@ -45,4 +45,10 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <MauiXaml Update="Views\LiveFeedPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+  </ItemGroup>
+
 </Project>

@@ -18,6 +18,11 @@
                       ContentTemplate="{DataTemplate views:YoloPage}"
                       Route="YoloPage" />
 
+        <ShellContent Title="Live Feed"
+                      Icon="yolo.png"
+                      ContentTemplate="{DataTemplate views:LiveFeedPage}"
+                      Route="LiveFeedPage" />
+
         <ShellContent Title="Qwen-VL"
                       Icon="qwen.png"
                       ContentTemplate="{DataTemplate views:QwenVlPage}"

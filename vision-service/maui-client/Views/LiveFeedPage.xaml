@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiClient.ViewModels"
+             x:Class="MauiClient.Views.LiveFeedPage"
+             x:DataType="vm:LiveFeedViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="12" Padding="24">
+
+            <Label Text="Live Feed"
+                   Style="{StaticResource Headline}"
+                   HorizontalOptions="Center" />
+
+            <!-- URL entry (hidden in Local Camera mode) -->
+            <Label Text="Stream or Snapshot URL:"
+                   IsVisible="{Binding IsUrlMode}" />
+            <Entry Text="{Binding StreamUrl}"
+                   Placeholder="e.g. http://camera-host/mjpeg  or  /snapshot.jpg"
+                   ClearButtonVisibility="WhileEditing"
+                   IsVisible="{Binding IsUrlMode}" />
+
+            <!-- Feed mode + poll interval -->
+            <HorizontalStackLayout Spacing="12" HorizontalOptions="Start">
+                <Label Text="Feed mode:" VerticalOptions="Center" />
+                <Picker ItemsSource="{Binding FeedModes}"
+                        SelectedItem="{Binding SelectedFeedMode}"
+                        WidthRequest="180"
+                        VerticalOptions="Center" />
+                <Label Text="Poll interval (ms):"
+                       VerticalOptions="Center"
+                       IsVisible="{Binding IsSnapshotMode}" />
+                <Entry Text="{Binding PollIntervalMs, StringFormat='{0}'}"
+                       Keyboard="Numeric"
+                       WidthRequest="80"
+                       VerticalOptions="Center"
+                       IsVisible="{Binding IsSnapshotMode}" />
+            </HorizontalStackLayout>
+
+            <!-- Local camera device selection -->
+            <HorizontalStackLayout Spacing="12"
+                                   HorizontalOptions="Start"
+                                   IsVisible="{Binding IsLocalCameraMode}">
+                <Label Text="Camera:" VerticalOptions="Center" />
+                <Picker ItemsSource="{Binding CameraDevices}"
+                        SelectedItem="{Binding SelectedCameraDevice}"
+                        ItemDisplayBinding="{Binding Name}"
+                        WidthRequest="260"
+                        VerticalOptions="Center" />
+                <Button Text="⟳  Scan"
+                        Command="{Binding ScanCamerasCommand}"
+                        WidthRequest="90"
+                        VerticalOptions="Center" />
+                <ActivityIndicator IsRunning="{Binding IsScanningCameras}"
+                                   IsVisible="{Binding IsScanningCameras}"
+                                   VerticalOptions="Center"
+                                   WidthRequest="24" HeightRequest="24" />
+            </HorizontalStackLayout>
+
+            <!-- AI mode + confidence -->
+            <HorizontalStackLayout Spacing="12" HorizontalOptions="Start">
+                <Label Text="AI mode:" VerticalOptions="Center" />
+                <Picker ItemsSource="{Binding Modes}"
+                        SelectedItem="{Binding SelectedMode}"
+                        WidthRequest="140"
+                        VerticalOptions="Center" />
+                <Label Text="Confidence:"
+                       VerticalOptions="Center"
+                       IsVisible="{Binding ShowConfidence}" />
+                <Slider Minimum="0.1" Maximum="1.0"
+                        Value="{Binding Confidence}"
+                        WidthRequest="180"
+                        VerticalOptions="Center"
+                        IsVisible="{Binding ShowConfidence}" />
+                <Label Text="{Binding Confidence, StringFormat='{0:P0}'}"
+                       WidthRequest="46"
+                       VerticalOptions="Center"
+                       IsVisible="{Binding ShowConfidence}" />
+            </HorizontalStackLayout>
+
+            <!-- Start / Stop -->
+            <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                <Button Text="▶  Start Feed"
+                        Command="{Binding StartStreamCommand}"
+                        WidthRequest="160" />
+                <Button Text="■  Stop Feed"
+                        Command="{Binding StopStreamCommand}"
+                        BackgroundColor="{StaticResource Danger}"
+                        WidthRequest="160" />
+            </HorizontalStackLayout>
+
+            <!-- Live preview -->
+            <Border StrokeShape="RoundRectangle 8"
+                    StrokeThickness="1"
+                    Stroke="{StaticResource Gray300}"
+                    HeightRequest="380"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray950}}">
+                <Grid>
+                    <Label Text="No frame received yet."
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           TextColor="{StaticResource Gray400}"
+                           IsVisible="{Binding IsFrameNotAvailable}" />
+                    <Image Source="{Binding CurrentFrame}"
+                           Aspect="AspectFit"
+                           IsVisible="{Binding IsFrameAvailable}" />
+                </Grid>
+            </Border>
+
+            <!-- Live stats row -->
+            <HorizontalStackLayout Spacing="24"
+                                   HorizontalOptions="Center"
+                                   IsVisible="{Binding IsStreaming}">
+                <Label Text="{Binding Fps, StringFormat='FPS: {0:F1}'}"
+                       FontAttributes="Bold" />
+                <Label Text="{Binding FrameCount, StringFormat='Frames: {0:N0}'}" />
+                <Label Text="{Binding ProcessingTimeMs, StringFormat='AI: {0:F0} ms'}" />
+                <Label Text="{Binding StatusText}"
+                       TextColor="{StaticResource Success}"
+                       FontAttributes="Bold" />
+            </HorizontalStackLayout>
+
+            <!-- Results -->
+            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="12">
+                <Label Text="{Binding ResultText}"
+                       FontFamily="Monospace"
+                       FontSize="12"
+                       LineBreakMode="WordWrap" />
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
