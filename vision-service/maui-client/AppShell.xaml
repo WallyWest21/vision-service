@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:MauiClient.Views"
+       x:Class="MauiClient.AppShell"
+       Title="Vision Service Client"
+       Shell.NavBarIsVisible="True">
+
+    <TabBar>
+
+        <ShellContent Title="Health"
+                      Icon="health.png"
+                      ContentTemplate="{DataTemplate views:HealthPage}"
+                      Route="HealthPage" />
+
+        <ShellContent Title="YOLO"
+                      Icon="yolo.png"
+                      ContentTemplate="{DataTemplate views:YoloPage}"
+                      Route="YoloPage" />
+
+        <ShellContent Title="Qwen-VL"
+                      Icon="qwen.png"
+                      ContentTemplate="{DataTemplate views:QwenVlPage}"
+                      Route="QwenVlPage" />
+
+        <ShellContent Title="Pipeline"
+                      Icon="pipeline.png"
+                      ContentTemplate="{DataTemplate views:PipelinePage}"
+                      Route="PipelinePage" />
+
+        <ShellContent Title="Admin"
+                      Icon="admin.png"
+                      ContentTemplate="{DataTemplate views:AdminPage}"
+                      Route="AdminPage" />
+
+        <ShellContent Title="Settings"
+                      Icon="settings.png"
+                      ContentTemplate="{DataTemplate views:SettingsPage}"
+                      Route="SettingsPage" />
+
+    </TabBar>
+
+</Shell>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiClient.ViewModels"
+             x:Class="MauiClient.Views.PipelinePage"
+             x:DataType="vm:PipelineViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="12" Padding="24">
+
+            <Label Text="Pipeline (YOLO + Qwen-VL)"
+                   Style="{StaticResource Headline}"
+                   HorizontalOptions="Center" />
+
+            <Button Text="Pick Image"
+                    Command="{Binding PickImageCommand}"
+                    HorizontalOptions="Center"
+                    WidthRequest="180" />
+
+            <Image Source="{Binding PreviewImage}"
+                   HeightRequest="200"
+                   Aspect="AspectFit"
+                   IsVisible="{Binding PreviewImage, Converter={StaticResource NullToBoolConverter}}" />
+
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto"
+                  ColumnSpacing="8" RowSpacing="8">
+                <Button Grid.Row="0" Grid.Column="0"
+                        Text="Detect + Describe"
+                        Command="{Binding DetectAndDescribeCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+                <Button Grid.Row="0" Grid.Column="1"
+                        Text="Safety Check"
+                        Command="{Binding SafetyCheckCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+                <Button Grid.Row="1" Grid.Column="0"
+                        Text="Inventory"
+                        Command="{Binding InventoryCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+                <Button Grid.Row="1" Grid.Column="1"
+                        Text="Scene Analysis"
+                        Command="{Binding SceneCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+            </Grid>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="12">
+                <Label Text="{Binding ResultText}"
+                       FontFamily="Monospace"
+                       FontSize="11"
+                       LineBreakMode="WordWrap" />
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

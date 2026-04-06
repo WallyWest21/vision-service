@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiClient.ViewModels"
+             x:Class="MauiClient.Views.YoloPage"
+             x:DataType="vm:YoloViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="12" Padding="24">
+
+            <Label Text="YOLO Object Analysis"
+                   Style="{StaticResource Headline}"
+                   HorizontalOptions="Center" />
+
+            <!-- Image picker -->
+            <Button Text="Pick Image"
+                    Command="{Binding PickImageCommand}"
+                    HorizontalOptions="Center"
+                    WidthRequest="180" />
+
+            <Image Source="{Binding PreviewImage}"
+                   HeightRequest="200"
+                   Aspect="AspectFit"
+                   IsVisible="{Binding PreviewImage, Converter={StaticResource NullToBoolConverter}}" />
+
+            <!-- Confidence slider -->
+            <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                <Label Text="Confidence:" VerticalOptions="Center" />
+                <Slider Minimum="0.1" Maximum="1.0"
+                        Value="{Binding Confidence}"
+                        WidthRequest="200"
+                        VerticalOptions="Center" />
+                <Label Text="{Binding Confidence, StringFormat='{0:P0}'}"
+                       WidthRequest="50"
+                       VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <!-- Action buttons -->
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto"
+                  ColumnSpacing="8" RowSpacing="8">
+                <Button Grid.Row="0" Grid.Column="0"
+                        Text="Detect"
+                        Command="{Binding DetectCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+                <Button Grid.Row="0" Grid.Column="1"
+                        Text="Segment"
+                        Command="{Binding SegmentCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+                <Button Grid.Row="1" Grid.Column="0"
+                        Text="Classify"
+                        Command="{Binding ClassifyCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+                <Button Grid.Row="1" Grid.Column="1"
+                        Text="Pose"
+                        Command="{Binding PoseCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+            </Grid>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="12">
+                <Label Text="{Binding ResultText}"
+                       FontFamily="Monospace"
+                       FontSize="12"
+                       LineBreakMode="WordWrap" />
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

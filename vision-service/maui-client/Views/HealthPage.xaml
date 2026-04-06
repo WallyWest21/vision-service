@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiClient.ViewModels"
+             x:Class="MauiClient.Views.HealthPage"
+             x:DataType="vm:HealthViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="24">
+
+            <Label Text="Vision Service — Health Check"
+                   Style="{StaticResource Headline}"
+                   HorizontalOptions="Center" />
+
+            <Button Text="Check Health"
+                    Command="{Binding CheckHealthCommand}"
+                    IsEnabled="{Binding IsNotBusy}"
+                    HorizontalOptions="Center"
+                    WidthRequest="200" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="12">
+                <Label Text="{Binding ResultText}"
+                       FontFamily="Monospace"
+                       FontSize="13"
+                       LineBreakMode="WordWrap" />
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

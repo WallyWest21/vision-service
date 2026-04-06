@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiClient.ViewModels"
+             x:Class="MauiClient.Views.AdminPage"
+             x:DataType="vm:AdminViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="12" Padding="24">
+
+            <Label Text="Admin — API Key Management"
+                   Style="{StaticResource Headline}"
+                   HorizontalOptions="Center" />
+
+            <!-- List keys -->
+            <Button Text="List API Keys"
+                    Command="{Binding ListKeysCommand}"
+                    IsEnabled="{Binding IsNotBusy}"
+                    HorizontalOptions="Center"
+                    WidthRequest="200" />
+
+            <!-- New key form -->
+            <Label Text="Create New API Key" FontAttributes="Bold" Margin="0,8,0,0" />
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto"
+                  ColumnSpacing="8" RowSpacing="8">
+                <Label Grid.Row="0" Grid.Column="0" Text="Name:" VerticalOptions="Center" />
+                <Entry Grid.Row="0" Grid.Column="1"
+                       Text="{Binding NewKeyName}"
+                       Placeholder="e.g. dev-key"
+                       ClearButtonVisibility="WhileEditing" />
+
+                <Label Grid.Row="1" Grid.Column="0" Text="Scopes:" VerticalOptions="Center" />
+                <Entry Grid.Row="1" Grid.Column="1"
+                       Text="{Binding NewKeyScopes}"
+                       Placeholder="detect,analyze,admin"
+                       ClearButtonVisibility="WhileEditing" />
+
+                <Label Grid.Row="2" Grid.Column="0" Text="RPM:" VerticalOptions="Center" />
+                <Entry Grid.Row="2" Grid.Column="1"
+                       Text="{Binding NewKeyRpm}"
+                       Keyboard="Numeric"
+                       Placeholder="60" />
+            </Grid>
+
+            <Button Text="Create Key"
+                    Command="{Binding AddKeyCommand}"
+                    IsEnabled="{Binding IsNotBusy}"
+                    HorizontalOptions="Start"
+                    WidthRequest="160" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="12">
+                <Label Text="{Binding ResultText}"
+                       FontFamily="Monospace"
+                       FontSize="12"
+                       LineBreakMode="WordWrap" />
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

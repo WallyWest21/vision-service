@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiClient.ViewModels"
+             x:Class="MauiClient.Views.QwenVlPage"
+             x:DataType="vm:QwenVlViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="12" Padding="24">
+
+            <Label Text="Qwen-VL Vision Language"
+                   Style="{StaticResource Headline}"
+                   HorizontalOptions="Center" />
+
+            <!-- Image A picker -->
+            <Label Text="Image A" FontAttributes="Bold" />
+            <Button Text="Pick Image A"
+                    Command="{Binding PickImageCommand}"
+                    HorizontalOptions="Start"
+                    WidthRequest="160" />
+            <Image Source="{Binding PreviewImage}"
+                   HeightRequest="160"
+                   Aspect="AspectFit"
+                   IsVisible="{Binding PreviewImage, Converter={StaticResource NullToBoolConverter}}" />
+
+            <!-- Question -->
+            <Label Text="Question (for Ask):" />
+            <Entry Text="{Binding Question}"
+                   Placeholder="e.g. What objects are visible?"
+                   ClearButtonVisibility="WhileEditing" />
+
+            <!-- System Prompt -->
+            <Label Text="System prompt (for Analyze):" />
+            <Editor Text="{Binding SystemPrompt}"
+                    Placeholder="e.g. You are a safety inspector. Describe any hazards."
+                    HeightRequest="72"
+                    AutoSize="TextChanges" />
+
+            <!-- Action buttons row 1 -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Button Grid.Column="0" Text="Caption"
+                        Command="{Binding CaptionCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+                <Button Grid.Column="1" Text="Ask"
+                        Command="{Binding AskCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+                <Button Grid.Column="2" Text="OCR"
+                        Command="{Binding OcrCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+            </Grid>
+
+            <!-- Action buttons row 2 -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Button Grid.Column="0" Text="Analyze"
+                        Command="{Binding AnalyzeCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+                <Button Grid.Column="1" Text="Describe"
+                        Command="{Binding DescribeDetailedCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+                <Button Grid.Column="2" Text="Compare"
+                        Command="{Binding CompareCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+            </Grid>
+
+            <!-- Image B picker (Compare) -->
+            <Label Text="Image B (for Compare only)" FontAttributes="Italic" FontSize="12" />
+            <Button Text="Pick Image B"
+                    Command="{Binding PickImageBCommand}"
+                    HorizontalOptions="Start"
+                    WidthRequest="160" />
+            <Image Source="{Binding PreviewImageB}"
+                   HeightRequest="120"
+                   Aspect="AspectFit"
+                   IsVisible="{Binding PreviewImageB, Converter={StaticResource NullToBoolConverter}}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="12">
+                <Label Text="{Binding ResultText}"
+                       FontSize="13"
+                       LineBreakMode="WordWrap" />
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

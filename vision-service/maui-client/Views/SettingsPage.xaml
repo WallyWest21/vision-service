@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiClient.ViewModels"
+             x:Class="MauiClient.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="12" Padding="24">
+
+            <Label Text="Settings"
+                   Style="{StaticResource Headline}"
+                   HorizontalOptions="Center" />
+
+            <Label Text="Service URL:" />
+            <Entry Text="{Binding ServiceUrl}"
+                   Placeholder="http://localhost:5100"
+                   ClearButtonVisibility="WhileEditing"
+                   Keyboard="Url" />
+
+            <Label Text="API Key (X-Api-Key header):" />
+            <Entry Text="{Binding ApiKey}"
+                   Placeholder="Leave blank to skip auth"
+                   IsPassword="False"
+                   ClearButtonVisibility="WhileEditing" />
+
+            <HorizontalStackLayout Spacing="12">
+                <Button Text="Save"
+                        Command="{Binding SaveCommand}"
+                        WidthRequest="120" />
+                <Button Text="Load Saved"
+                        Command="{Binding LoadCommand}"
+                        WidthRequest="140" />
+            </HorizontalStackLayout>
+
+            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="12">
+                <Label Text="{Binding ResultText}"
+                       FontSize="13" />
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
