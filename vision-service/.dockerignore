@@ -8,7 +8,7 @@ maui-client/
 **/TestResults/
 
 # Exclude compose overrides and local config
-docker-compose.override.yml
+docker-compose.dev.yml
 docker-compose.cpu.yml
 docker-compose.prod.yml
 

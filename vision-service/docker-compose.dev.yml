@@ -1,0 +1,50 @@
+# Local development override — hot reload, polling watcher, no GPU required.
+#
+# Usage (explicitly named, never auto-merges):
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# What this changes vs the base docker-compose.yml:
+#   • Builds from the 'build' stage (SDK image) so dotnet watch is available
+#   • Mounts src/VisionService for hot reload via dotnet watch run
+#   • Sets ASPNETCORE_ENVIRONMENT=Development
+#   • Removes NVIDIA GPU reservations from AI backends (CPU fallback)
+#   • Relaxes depends_on to service_started so startup isn't blocked
+
+services:
+  vision-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: build
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5100
+      - DOTNET_USE_POLLING_FILE_WATCHER=true
+    volumes:
+      - ./src/VisionService:/src/src/VisionService
+      - ./data/images:/data/images
+    ports:
+      - "5100:5100"
+    command: ["dotnet", "watch", "run", "--project", "/src/src/VisionService/VisionService.csproj"]
+    depends_on:
+      yolo-api:
+        condition: service_started
+      qwen-vl:
+        condition: service_started
+
+  # Remove NVIDIA GPU reservation — YOLOv8 falls back to CPU in dev.
+  yolo-api:
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+
+  # Remove NVIDIA GPU reservation — vLLM on CPU is slow but avoids GPU requirement in dev.
+  # For a faster no-GPU dev loop use docker-compose.cpu.yml instead.
+  qwen-vl:
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 8G
