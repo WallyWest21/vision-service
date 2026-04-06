@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="VisionServiceClient.Views.PipelinePage"
+             Title="Pipeline Analysis">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <Label Text="Combined AI Pipeline" FontSize="22" FontAttributes="Bold" />
+
+            <Label Text="Pipeline Mode:" FontAttributes="Bold" />
+            <Picker ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode}" />
+
+            <Button Text="Pick Image" Command="{Binding PickImageCommand}" />
+            <Label Text="{Binding SelectedImagePath}"
+                   FontSize="12"
+                   TextColor="{StaticResource Gray500}"
+                   LineBreakMode="TailTruncation" />
+
+            <Button Text="Run Pipeline"
+                    Command="{Binding RunCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    IsEnabled="{Binding IsNotBusy}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Primary}" />
+            <Label Text="{Binding StatusMessage}" TextColor="Green" />
+            <Label Text="{Binding ErrorMessage}" TextColor="Red" />
+            <Label Text="Results:" FontAttributes="Bold" />
+            <Editor Text="{Binding ResultText}"
+                    IsReadOnly="True"
+                    AutoSize="TextChanges"
+                    BackgroundColor="{StaticResource Gray100}"
+                    MinimumHeightRequest="200" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

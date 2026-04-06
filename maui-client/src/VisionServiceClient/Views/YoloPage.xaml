@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="VisionServiceClient.Views.YoloPage"
+             Title="YOLO Detection">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <Label Text="YOLO Vision Analysis" FontSize="22" FontAttributes="Bold" />
+
+            <Label Text="Mode:" FontAttributes="Bold" />
+            <Picker ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode}" />
+
+            <Button Text="Pick Image" Command="{Binding PickImageCommand}" />
+            <Label Text="{Binding SelectedImagePath}"
+                   FontSize="12"
+                   TextColor="{StaticResource Gray500}"
+                   LineBreakMode="TailTruncation" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label Text="Confidence:" FontAttributes="Bold" />
+                    <Slider Minimum="0" Maximum="1" Value="{Binding Confidence}" />
+                    <Label Text="{Binding Confidence, StringFormat='{0:P0}'}" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label Text="Top N (classify):" FontAttributes="Bold" />
+                    <Entry Text="{Binding TopN}" Keyboard="Numeric" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <Button Text="Run Analysis"
+                    Command="{Binding RunCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    IsEnabled="{Binding IsNotBusy}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Primary}" />
+            <Label Text="{Binding StatusMessage}" TextColor="Green" />
+            <Label Text="{Binding ErrorMessage}" TextColor="Red" />
+            <Label Text="Results:" FontAttributes="Bold" />
+            <Editor Text="{Binding ResultText}"
+                    IsReadOnly="True"
+                    AutoSize="TextChanges"
+                    FontFamily="Courier New"
+                    BackgroundColor="{StaticResource Gray100}"
+                    MinimumHeightRequest="200" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
