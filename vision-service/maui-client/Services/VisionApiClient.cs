@@ -45,7 +45,24 @@ public class VisionApiClient
 
     private static async Task<T> ReadAsync<T>(HttpResponseMessage response)
     {
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var detail = response.ReasonPhrase ?? response.StatusCode.ToString();
+            try
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                if (!string.IsNullOrWhiteSpace(body))
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(body);
+                    if (doc.RootElement.TryGetProperty("detail", out var d) && d.ValueKind == System.Text.Json.JsonValueKind.String)
+                        detail = d.GetString() ?? detail;
+                    else if (doc.RootElement.TryGetProperty("title", out var t) && t.ValueKind == System.Text.Json.JsonValueKind.String)
+                        detail = t.GetString() ?? detail;
+                }
+            }
+            catch { /* keep status-line detail */ }
+            throw new HttpRequestException(detail, null, response.StatusCode);
+        }
         var result = await response.Content.ReadFromJsonAsync<T>(_json)
             ?? throw new InvalidOperationException("Empty response body");
         return result;

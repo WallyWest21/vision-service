@@ -5,7 +5,7 @@ import os
 import time
 from typing import Optional
 
-from fastapi import FastAPI, File, Query, UploadFile
+from fastapi import FastAPI, File, Form, Query, UploadFile
 from fastapi.responses import JSONResponse
 from PIL import Image
 from ultralytics import YOLO
@@ -41,23 +41,23 @@ async def health():
 @app.post("/detect")
 async def detect(
     file: UploadFile = File(...),
-    confidence: float = Query(DEFAULT_CONF, ge=0.0, le=1.0),
+    confidence: float = Form(DEFAULT_CONF),
     max_detections: int = Query(100, ge=1, le=1000),
 ):
     start = time.time()
     img = read_image(await file.read())
     model = get_model("detect")
-    results = model(img, conf=confidence)
+    results = model(img, conf=max(0.0, min(1.0, confidence)))
 
     detections = []
     for r in results:
         for box in r.boxes:
             detections.append(
                 {
-                    "class_id": int(box.cls[0]),
-                    "class_name": model.names[int(box.cls[0])],
+                    "label": model.names[int(box.cls[0])],
+                    "classId": int(box.cls[0]),
                     "confidence": float(box.conf[0]),
-                    "bbox": {
+                    "boundingBox": {
                         "x1": float(box.xyxy[0][0]),
                         "y1": float(box.xyxy[0][1]),
                         "x2": float(box.xyxy[0][2]),
@@ -69,9 +69,7 @@ async def detect(
     return JSONResponse(
         {
             "detections": detections[:max_detections],
-            "count": len(detections[:max_detections]),
-            "image_size": {"width": img.width, "height": img.height},
-            "processing_time_ms": round((time.time() - start) * 1000, 2),
+            "processingTimeMs": round((time.time() - start) * 1000, 2),
             "model": MODEL_NAME,
         }
     )
@@ -80,24 +78,25 @@ async def detect(
 @app.post("/segment")
 async def segment(
     file: UploadFile = File(...),
-    confidence: float = Query(DEFAULT_CONF, ge=0.0, le=1.0),
+    confidence: float = Form(DEFAULT_CONF),
 ):
     start = time.time()
     img = read_image(await file.read())
     model = get_model("segment")
-    results = model(img, conf=confidence)
+    results = model(img, conf=max(0.0, min(1.0, confidence)))
 
-    segments = []
+    segmentations = []
     for r in results:
         if r.masks is not None:
             for i, mask in enumerate(r.masks.xy):
-                segments.append(
+                flat_mask = [coord for p in mask for coord in (float(p[0]), float(p[1]))]
+                segmentations.append(
                     {
-                        "class_id": int(r.boxes[i].cls[0]),
-                        "class_name": model.names[int(r.boxes[i].cls[0])],
+                        "label": model.names[int(r.boxes[i].cls[0])],
+                        "classId": int(r.boxes[i].cls[0]),
                         "confidence": float(r.boxes[i].conf[0]),
-                        "polygon": [[float(p[0]), float(p[1])] for p in mask],
-                        "bbox": {
+                        "mask": flat_mask,
+                        "boundingBox": {
                             "x1": float(r.boxes[i].xyxy[0][0]),
                             "y1": float(r.boxes[i].xyxy[0][1]),
                             "x2": float(r.boxes[i].xyxy[0][2]),
@@ -108,39 +107,51 @@ async def segment(
 
     return JSONResponse(
         {
-            "segments": segments,
-            "count": len(segments),
-            "image_size": {"width": img.width, "height": img.height},
-            "processing_time_ms": round((time.time() - start) * 1000, 2),
+            "segmentations": segmentations,
+            "processingTimeMs": round((time.time() - start) * 1000, 2),
         }
     )
+
+
+_COCO_KEYPOINT_NAMES = [
+    "nose", "left_eye", "right_eye", "left_ear", "right_ear",
+    "left_shoulder", "right_shoulder", "left_elbow", "right_elbow",
+    "left_wrist", "right_wrist", "left_hip", "right_hip",
+    "left_knee", "right_knee", "left_ankle", "right_ankle",
+]
 
 
 @app.post("/pose")
 async def pose(
     file: UploadFile = File(...),
-    confidence: float = Query(DEFAULT_CONF, ge=0.0, le=1.0),
+    confidence: float = Form(DEFAULT_CONF),
 ):
     start = time.time()
     img = read_image(await file.read())
     model = get_model("pose")
-    results = model(img, conf=confidence)
+    results = model(img, conf=max(0.0, min(1.0, confidence)))
 
     poses = []
     for r in results:
         if r.keypoints is not None:
+            kp_confs = r.keypoints.conf
             for i, kpts in enumerate(r.keypoints.xy):
                 keypoints = []
                 for j, kp in enumerate(kpts):
+                    kp_conf = float(kp_confs[i][j]) if kp_confs is not None else 0.0
                     keypoints.append(
-                        {"id": j, "x": float(kp[0]), "y": float(kp[1])}
+                        {
+                            "name": _COCO_KEYPOINT_NAMES[j] if j < len(_COCO_KEYPOINT_NAMES) else str(j),
+                            "x": float(kp[0]),
+                            "y": float(kp[1]),
+                            "confidence": kp_conf,
+                        }
                     )
                 poses.append(
                     {
-                        "person_id": i,
                         "confidence": float(r.boxes[i].conf[0]),
                         "keypoints": keypoints,
-                        "bbox": {
+                        "boundingBox": {
                             "x1": float(r.boxes[i].xyxy[0][0]),
                             "y1": float(r.boxes[i].xyxy[0][1]),
                             "x2": float(r.boxes[i].xyxy[0][2]),
@@ -152,9 +163,8 @@ async def pose(
     return JSONResponse(
         {
             "poses": poses,
-            "count": len(poses),
-            "image_size": {"width": img.width, "height": img.height},
-            "processing_time_ms": round((time.time() - start) * 1000, 2),
+            "processingTimeMs": round((time.time() - start) * 1000, 2),
+            "model": MODEL_NAME,
         }
     )
 
@@ -162,9 +172,10 @@ async def pose(
 @app.post("/classify")
 async def classify(
     file: UploadFile = File(...),
-    top_n: int = Query(5, ge=1, le=20),
+    top_n: int = Form(5),
 ):
     start = time.time()
+    top_n = max(1, min(20, top_n))
     img = read_image(await file.read())
     model = get_model("classify")
     results = model(img)
@@ -176,8 +187,8 @@ async def classify(
         for idx in top_indices:
             classifications.append(
                 {
-                    "class_id": int(idx),
-                    "class_name": model.names[int(idx)],
+                    "label": model.names[int(idx)],
+                    "classId": int(idx),
                     "confidence": float(probs.data[idx]),
                 }
             )
@@ -185,7 +196,7 @@ async def classify(
     return JSONResponse(
         {
             "classifications": classifications,
-            "image_size": {"width": img.width, "height": img.height},
-            "processing_time_ms": round((time.time() - start) * 1000, 2),
+            "processingTimeMs": round((time.time() - start) * 1000, 2),
+            "model": MODEL_NAME,
         }
     )

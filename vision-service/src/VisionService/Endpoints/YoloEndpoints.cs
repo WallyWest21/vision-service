@@ -140,7 +140,7 @@ public static class YoloEndpoints
                 var segmentations = await yolo.SegmentAsync(stream, confidence, ct);
                 return new SegmentationResponse
                 {
-                    Segmentations = segmentations,
+                    Segments = segmentations,
                     Model = "YOLOv8-Seg"
                 };
             });
@@ -263,7 +263,7 @@ public class DetectionResponse
 public class SegmentationResponse
 {
     /// <summary>List of segmentation results.</summary>
-    public IReadOnlyList<Segmentation> Segmentations { get; set; } = [];
+    public IReadOnlyList<Segmentation> Segments { get; set; } = [];
 
     /// <summary>Model used for segmentation.</summary>
     public string Model { get; set; } = string.Empty;

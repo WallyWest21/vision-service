@@ -1,0 +1,10 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY requirements-stub.txt .
+RUN pip install --no-cache-dir -r requirements-stub.txt
+
+COPY stub_yolo.py .
+
+EXPOSE 7860
+CMD ["python", "stub_yolo.py"]
