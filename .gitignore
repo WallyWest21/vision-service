@@ -1,6 +1,10 @@
 # Visual Studio local files
 .vs/
 
+# Build output
+**/bin/
+**/obj/
+
 # OS
 .DS_Store
 Thumbs.db

@@ -1,0 +1,37 @@
+name: MAUI Client CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'maui-client/**'
+      - '.github/workflows/maui-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'maui-client/**'
+      - '.github/workflows/maui-ci.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install MAUI Windows workload
+        run: dotnet workload install maui-windows
+
+      - name: Restore dependencies
+        working-directory: maui-client
+        run: dotnet restore VisionServiceClient.sln
+
+      - name: Build
+        working-directory: maui-client
+        run: dotnet build VisionServiceClient.sln --no-restore --configuration Release

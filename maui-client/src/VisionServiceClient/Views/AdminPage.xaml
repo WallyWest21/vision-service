@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="VisionServiceClient.Views.AdminPage"
+             Title="API Key Administration">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <Label Text="API Key Management" FontSize="22" FontAttributes="Bold" />
+
+            <Label Text="List API Keys" FontSize="16" FontAttributes="Bold" />
+            <Button Text="List All Keys"
+                    Command="{Binding ListKeysCommand}"
+                    IsEnabled="{Binding IsNotBusy}" />
+            <Editor Text="{Binding KeysText}"
+                    IsReadOnly="True"
+                    AutoSize="TextChanges"
+                    BackgroundColor="{StaticResource Gray100}"
+                    MinimumHeightRequest="100" />
+
+            <BoxView HeightRequest="1" BackgroundColor="{StaticResource Gray300}" Margin="0,8" />
+
+            <Label Text="Generate New API Key" FontSize="16" FontAttributes="Bold" />
+            <Label Text="Key Name:" FontAttributes="Bold" />
+            <Entry Placeholder="e.g. my-app-key" Text="{Binding NewKeyName}" />
+            <Label Text="Scopes (comma-separated):" FontAttributes="Bold" />
+            <Entry Placeholder="detect,analyze,admin,stream" Text="{Binding NewKeyScopes}" />
+            <Label Text="Rate Limit (req/min):" FontAttributes="Bold" />
+            <Entry Text="{Binding NewKeyRpm}" Keyboard="Numeric" />
+            <Button Text="Generate Key"
+                    Command="{Binding GenerateKeyCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    IsEnabled="{Binding IsNotBusy}" />
+
+            <Label Text="Generated Key (copy now!):" FontAttributes="Bold" TextColor="Green" />
+            <Editor Text="{Binding GeneratedKey}"
+                    IsReadOnly="True"
+                    BackgroundColor="{StaticResource Gray100}"
+                    MinimumHeightRequest="40" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Primary}" />
+            <Label Text="{Binding StatusMessage}" TextColor="Green" />
+            <Label Text="{Binding ErrorMessage}" TextColor="Red" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

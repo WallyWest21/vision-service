@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="VisionServiceClient.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:VisionServiceClient.Views"
+    Title="Vision Service Client"
+    FlyoutBehavior="Flyout">
+
+    <ShellContent Title="Health" ContentTemplate="{DataTemplate views:HealthPage}" Route="health" />
+    <ShellContent Title="YOLO Detection" ContentTemplate="{DataTemplate views:YoloPage}" Route="yolo" />
+    <ShellContent Title="Vision-Language" ContentTemplate="{DataTemplate views:QwenVlPage}" Route="qwenvl" />
+    <ShellContent Title="Pipeline" ContentTemplate="{DataTemplate views:PipelinePage}" Route="pipeline" />
+    <ShellContent Title="Admin" ContentTemplate="{DataTemplate views:AdminPage}" Route="admin" />
+    <ShellContent Title="Settings" ContentTemplate="{DataTemplate views:SettingsPage}" Route="settings" />
+</Shell>
