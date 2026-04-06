@@ -40,27 +40,21 @@
             <!-- Action buttons row 1 -->
             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
                 <Button Grid.Column="0" Text="Caption"
-                        Command="{Binding CaptionCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        Command="{Binding CaptionCommand}" />
                 <Button Grid.Column="1" Text="Ask"
-                        Command="{Binding AskCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        Command="{Binding AskCommand}" />
                 <Button Grid.Column="2" Text="OCR"
-                        Command="{Binding OcrCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        Command="{Binding OcrCommand}" />
             </Grid>
 
             <!-- Action buttons row 2 -->
             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
                 <Button Grid.Column="0" Text="Analyze"
-                        Command="{Binding AnalyzeCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        Command="{Binding AnalyzeCommand}" />
                 <Button Grid.Column="1" Text="Describe"
-                        Command="{Binding DescribeDetailedCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        Command="{Binding DescribeDetailedCommand}" />
                 <Button Grid.Column="2" Text="Compare"
-                        Command="{Binding CompareCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        Command="{Binding CompareCommand}" />
             </Grid>
 
             <!-- Image B picker (Compare) -->

@@ -39,6 +39,7 @@ public partial class QwenVlViewModel : BaseViewModel
         _imageBytes = await File.ReadAllBytesAsync(result.FullPath);
         PreviewImage = ImageSource.FromFile(result.FullPath);
         SetResult(string.Empty);
+        NotifyAllCommands();
     }
 
     [RelayCommand]
@@ -53,6 +54,7 @@ public partial class QwenVlViewModel : BaseViewModel
         SelectedImageBPath = result.FullPath;
         _imageBBytes = await File.ReadAllBytesAsync(result.FullPath);
         PreviewImageB = ImageSource.FromFile(result.FullPath);
+        NotifyAllCommands();
     }
 
     [RelayCommand(CanExecute = nameof(CanCallApi))]
