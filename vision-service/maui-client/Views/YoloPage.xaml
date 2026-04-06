@@ -41,20 +41,16 @@
                   ColumnSpacing="8" RowSpacing="8">
                 <Button Grid.Row="0" Grid.Column="0"
                         Text="Detect"
-                        Command="{Binding DetectCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        Command="{Binding DetectCommand}" />
                 <Button Grid.Row="0" Grid.Column="1"
                         Text="Segment"
-                        Command="{Binding SegmentCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        Command="{Binding SegmentCommand}" />
                 <Button Grid.Row="1" Grid.Column="0"
                         Text="Classify"
-                        Command="{Binding ClassifyCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        Command="{Binding ClassifyCommand}" />
                 <Button Grid.Row="1" Grid.Column="1"
                         Text="Pose"
-                        Command="{Binding PoseCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                        Command="{Binding PoseCommand}" />
             </Grid>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}"

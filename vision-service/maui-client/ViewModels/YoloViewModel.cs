@@ -37,6 +37,10 @@ public partial class YoloViewModel : BaseViewModel
         _imageBytes = await File.ReadAllBytesAsync(result.FullPath);
         PreviewImage = ImageSource.FromFile(result.FullPath);
         SetResult(string.Empty);
+        DetectCommand.NotifyCanExecuteChanged();
+        SegmentCommand.NotifyCanExecuteChanged();
+        ClassifyCommand.NotifyCanExecuteChanged();
+        PoseCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand(CanExecute = nameof(CanCallApi))]

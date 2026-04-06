@@ -28,43 +28,14 @@ services:
 
   qwen-vl:
     # Replace the full vLLM image with a minimal OpenAI-API-compatible stub.
-    image: python:3.11-slim
+    build:
+      context: ./docker/stub
+      dockerfile: Dockerfile.stub
+    image: qwen-vl-stub
     container_name: qwen-vl
     ports:
       - "8001:8000"
     volumes: []
-    command: >
-      bash -c "pip install --quiet fastapi uvicorn &&
-      python -c \"
-import json, time
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-import uvicorn
-
-app = FastAPI()
-
-@app.get('/health')
-def health():
-    return {'status': 'ok'}
-
-@app.post('/v1/chat/completions')
-async def chat(request: Request):
-    body = await request.json()
-    return JSONResponse({
-        'id': 'stub-0',
-        'object': 'chat.completion',
-        'created': int(time.time()),
-        'model': 'stub',
-        'choices': [{
-            'index': 0,
-            'message': {'role': 'assistant', 'content': '[CPU stub] Image analysis not available without GPU.'},
-            'finish_reason': 'stop'
-        }],
-        'usage': {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
-    })
-
-uvicorn.run(app, host='0.0.0.0', port=8000)
-\""
     environment: []
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
