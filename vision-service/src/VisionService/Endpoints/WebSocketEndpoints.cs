@@ -26,7 +26,8 @@ public static class WebSocketEndpoints
         IQwenVlClient qwen,
         IOptionsMonitor<PerformanceOptions> perfOptions,
         IOptionsMonitor<AuthOptions> authOptions,
-        [FromKeyedServices("ws-connection-limit")] SemaphoreSlim connectionLimit)
+        [FromKeyedServices("ws-connection-limit")] SemaphoreSlim connectionLimit,
+        IHostApplicationLifetime appLifetime)
     {
         if (!context.WebSockets.IsWebSocketRequest)
         {
@@ -71,17 +72,34 @@ public static class WebSocketEndpoints
 
             var buffer = new byte[perfOptions.CurrentValue.MaxWebSocketFrameBytes];
 
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                context.RequestAborted,
+                appLifetime.ApplicationStopping);
+            var token = linkedCts.Token;
+
             while (ws.State == WebSocketState.Open)
             {
                 WebSocketReceiveResult result;
                 using var ms = new MemoryStream();
 
-                do
+                try
                 {
-                    result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), context.RequestAborted);
-                    if (result.MessageType == WebSocketMessageType.Close) break;
-                    ms.Write(buffer, 0, result.Count);
-                } while (!result.EndOfMessage);
+                    do
+                    {
+                        result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), token);
+                        if (result.MessageType == WebSocketMessageType.Close) break;
+                        ms.Write(buffer, 0, result.Count);
+                    } while (!result.EndOfMessage);
+                }
+                catch (OperationCanceledException)
+                {
+                    if (ws.State == WebSocketState.Open)
+                    {
+                        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Server shutting down",
+                            CancellationToken.None);
+                    }
+                    break;
+                }
 
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
@@ -98,12 +116,12 @@ public static class WebSocketEndpoints
                 {
                     if (mode == "caption")
                     {
-                        var vlResponse = await qwen.CaptionAsync(ms, context.RequestAborted);
+                        var vlResponse = await qwen.CaptionAsync(ms, token);
                         response = new { Mode = "caption", Result = vlResponse.Text };
                     }
                     else
                     {
-                        var detections = await yolo.DetectAsync(ms, ct: context.RequestAborted);
+                        var detections = await yolo.DetectAsync(ms, ct: token);
                         response = new { Mode = "detect", Detections = detections };
                     }
                 }
@@ -114,7 +132,7 @@ public static class WebSocketEndpoints
 
                 var json = JsonSerializer.Serialize(response, JsonOpts);
                 var bytes = Encoding.UTF8.GetBytes(json);
-                await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, context.RequestAborted);
+                await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, token);
             }
         }
         finally

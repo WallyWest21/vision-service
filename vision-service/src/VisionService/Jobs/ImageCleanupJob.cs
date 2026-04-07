@@ -24,21 +24,30 @@ public class ImageCleanupJob : BackgroundService
     {
         _logger.LogInformation("ImageCleanupJob started");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                using var scope = _scopeFactory.CreateScope();
-                var imageService = scope.ServiceProvider.GetRequiredService<IImageService>();
-                var deleted = await imageService.CleanupExpiredAsync(stoppingToken);
-                _logger.LogInformation("ImageCleanupJob: removed {Count} expired images", deleted);
-            }
-            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
-            {
-                _logger.LogError(ex, "ImageCleanupJob encountered an error");
-            }
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var imageService = scope.ServiceProvider.GetRequiredService<IImageService>();
+                    var deleted = await imageService.CleanupExpiredAsync(stoppingToken);
+                    _logger.LogInformation("ImageCleanupJob: removed {Count} expired images", deleted);
+                }
+                catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogError(ex, "ImageCleanupJob encountered an error");
+                }
 
-            await Task.Delay(TimeSpan.FromHours(_perfOptions.CurrentValue.ImageCleanupIntervalHours), stoppingToken);
+                await Task.Delay(TimeSpan.FromHours(_perfOptions.CurrentValue.ImageCleanupIntervalHours), stoppingToken);
+            }
         }
+        catch (OperationCanceledException)
+        {
+            // Expected when the host signals shutdown
+        }
+
+        _logger.LogInformation("Job stopping due to shutdown");
     }
 }
