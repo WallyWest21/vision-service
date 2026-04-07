@@ -10,6 +10,9 @@ using VisionService.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Graceful shutdown timeout
+builder.WebHost.UseShutdownTimeout(TimeSpan.FromSeconds(10));
+
 // Serilog
 builder.Host.UseSerilog((context, config) => config
     .ReadFrom.Configuration(context.Configuration)
@@ -59,6 +62,12 @@ builder.Services.AddResponseCompression(opts =>
 });
 
 var app = builder.Build();
+
+// Graceful shutdown hooks
+var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+var appLogger = app.Services.GetRequiredService<ILogger<Program>>();
+lifetime.ApplicationStopping.Register(() => appLogger.LogInformation("Shutting down gracefully..."));
+lifetime.ApplicationStopped.Register(() => appLogger.LogInformation("Shutdown complete"));
 
 // Middleware pipeline
 app.UseMiddleware<GlobalExceptionMiddleware>();
