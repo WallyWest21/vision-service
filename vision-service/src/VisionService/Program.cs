@@ -56,6 +56,7 @@ var app = builder.Build();
 // Middleware pipeline
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseResponseCompression();
+app.UseCors("VisionCors");
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<RateLimitMiddleware>();

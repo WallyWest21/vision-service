@@ -41,6 +41,40 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<CorsOptions>()
+            .Bind(configuration.GetSection(CorsOptions.SectionName));
+
+        var corsOptions = configuration.GetSection(CorsOptions.SectionName).Get<CorsOptions>() ?? new CorsOptions();
+        services.AddCors(options =>
+        {
+            options.AddPolicy("VisionCors", policy =>
+            {
+                var origins = corsOptions.AllowedOrigins;
+                if (origins is null || origins.Length == 0)
+                {
+                    // No origins configured: deny all cross-origin requests
+                    policy.WithOrigins(Array.Empty<string>());
+                }
+                else if (origins is ["*"])
+                {
+                    policy
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                    // WithExposedHeaders is omitted for wildcard origins as the
+                    // CORS spec does not permit it with AllowAnyOrigin()
+                }
+                else
+                {
+                    policy
+                        .WithOrigins(origins)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .WithExposedHeaders("X-Correlation-Id");
+                }
+            });
+        });
+
         services.AddYoloClient(configuration);
         services.AddQwenVlClient(configuration);
         services.AddImageService();
