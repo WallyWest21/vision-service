@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Prometheus;
 using Serilog;
+using VisionService.Diagnostics;
 using VisionService.Endpoints;
 using VisionService.Extensions;
 using VisionService.HealthChecks;
@@ -45,6 +48,24 @@ builder.Services.AddHealthChecks()
 
 // Vision services (options, clients, image service, event bus)
 builder.Services.AddVisionServices(builder.Configuration);
+
+// OpenTelemetry distributed tracing
+var otlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://localhost:4317";
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing =>
+    {
+        tracing
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("VisionService"))
+            .AddSource(VisionActivitySource.Name)
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddOtlpExporter(opts => opts.Endpoint = new Uri(otlpEndpoint));
+
+        if (builder.Environment.IsDevelopment())
+        {
+            tracing.AddConsoleExporter();
+        }
+    });
 
 // Background jobs
 builder.Services.AddHostedService<ImageCleanupJob>();

@@ -21,6 +21,7 @@ services:
       - STORAGE__MaxFileSizeMb=20
       - AUTH__Enabled=false
       - RATELIMIT__RequestsPerMinute=600
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     volumes:
       - image-storage:/data/images
     networks:
@@ -30,6 +31,8 @@ services:
         condition: service_healthy
       qwen-vl:
         condition: service_healthy
+      jaeger:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5100/health"]
       interval: 15s
@@ -42,6 +45,16 @@ services:
         limits:
           cpus: "2.0"
           memory: 1G
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    networks:
+      - vision-net
+    restart: unless-stopped
 
   qwen-vl:
     image: ghcr.io/wallywest21/qwen-vl:latest

@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using VisionService.Clients;
+using VisionService.Diagnostics;
 using VisionService.Models;
 
 namespace VisionService.Endpoints;
@@ -44,6 +46,7 @@ public static class PipelineEndpoints
         IQwenVlClient qwen,
         CancellationToken ct = default)
     {
+        using var activity = VisionActivitySource.Source.StartActivity("Pipeline.DetectAndDescribe");
         try
         {
             byte[] imageBytes;
@@ -57,6 +60,8 @@ public static class PipelineEndpoints
             var captionTask = qwen.CaptionAsync(new MemoryStream(imageBytes), ct);
             var caption = await captionTask;
 
+            activity?.SetTag("pipeline.detection_count", detections.Count);
+
             return Results.Ok(new
             {
                 Detections = detections,
@@ -66,6 +71,7 @@ public static class PipelineEndpoints
         }
         catch (HttpRequestException ex)
         {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             return Results.Problem("Backend unavailable: " + ex.Message, statusCode: 503);
         }
     }
