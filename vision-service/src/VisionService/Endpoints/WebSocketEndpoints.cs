@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using VisionService.Clients;
 using VisionService.Configuration;
@@ -23,7 +24,9 @@ public static class WebSocketEndpoints
         HttpContext context,
         IYoloClient yolo,
         IQwenVlClient qwen,
-        IOptionsMonitor<PerformanceOptions> perfOptions)
+        IOptionsMonitor<PerformanceOptions> perfOptions,
+        IOptionsMonitor<AuthOptions> authOptions,
+        [FromKeyedServices("ws-connection-limit")] SemaphoreSlim connectionLimit)
     {
         if (!context.WebSockets.IsWebSocketRequest)
         {
@@ -31,60 +34,92 @@ public static class WebSocketEndpoints
             return;
         }
 
-        using var ws = await context.WebSockets.AcceptWebSocketAsync();
-        var mode = context.Request.Query["mode"].ToString() switch
+        // Validate API key (header takes priority; query param supports browser WebSocket clients)
+        var auth = authOptions.CurrentValue;
+        if (auth.Enabled)
         {
-            "caption" => "caption",
-            "detect" => "detect",
-            _ => "detect"
-        };
+            var apiKey = context.Request.Headers["X-Api-Key"].ToString();
+            if (string.IsNullOrEmpty(apiKey))
+                apiKey = context.Request.Query["apiKey"].ToString();
 
-        var buffer = new byte[perfOptions.CurrentValue.MaxWebSocketFrameBytes];
+            var entry = auth.ApiKeys.FirstOrDefault(k => k.Key == apiKey);
+            if (entry is null)
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await context.Response.WriteAsJsonAsync(new { Error = "API key required or invalid" });
+                return;
+            }
+        }
 
-        while (ws.State == WebSocketState.Open)
+        // Enforce concurrent connection limit
+        if (!await connectionLimit.WaitAsync(0))
         {
-            WebSocketReceiveResult result;
-            using var ms = new MemoryStream();
+            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            await context.Response.WriteAsJsonAsync(new { Error = "WebSocket connection limit reached" });
+            return;
+        }
 
-            do
+        try
+        {
+            using var ws = await context.WebSockets.AcceptWebSocketAsync();
+            var mode = context.Request.Query["mode"].ToString() switch
             {
-                result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), context.RequestAborted);
-                if (result.MessageType == WebSocketMessageType.Close) break;
-                ms.Write(buffer, 0, result.Count);
-            } while (!result.EndOfMessage);
+                "caption" => "caption",
+                "detect" => "detect",
+                _ => "detect"
+            };
 
-            if (result.MessageType == WebSocketMessageType.Close)
+            var buffer = new byte[perfOptions.CurrentValue.MaxWebSocketFrameBytes];
+
+            while (ws.State == WebSocketState.Open)
             {
-                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed by client", context.RequestAborted);
-                break;
-            }
+                WebSocketReceiveResult result;
+                using var ms = new MemoryStream();
 
-            if (result.MessageType != WebSocketMessageType.Binary) continue;
-
-            ms.Position = 0;
-            object? response = null;
-
-            try
-            {
-                if (mode == "caption")
+                do
                 {
-                    var vlResponse = await qwen.CaptionAsync(ms, context.RequestAborted);
-                    response = new { Mode = "caption", Result = vlResponse.Text };
-                }
-                else
-                {
-                    var detections = await yolo.DetectAsync(ms, ct: context.RequestAborted);
-                    response = new { Mode = "detect", Detections = detections };
-                }
-            }
-            catch (Exception ex)
-            {
-                response = new { Error = ex.Message };
-            }
+                    result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), context.RequestAborted);
+                    if (result.MessageType == WebSocketMessageType.Close) break;
+                    ms.Write(buffer, 0, result.Count);
+                } while (!result.EndOfMessage);
 
-            var json = JsonSerializer.Serialize(response, JsonOpts);
-            var bytes = Encoding.UTF8.GetBytes(json);
-            await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, context.RequestAborted);
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed by client", context.RequestAborted);
+                    break;
+                }
+
+                if (result.MessageType != WebSocketMessageType.Binary) continue;
+
+                ms.Position = 0;
+                object? response = null;
+
+                try
+                {
+                    if (mode == "caption")
+                    {
+                        var vlResponse = await qwen.CaptionAsync(ms, context.RequestAborted);
+                        response = new { Mode = "caption", Result = vlResponse.Text };
+                    }
+                    else
+                    {
+                        var detections = await yolo.DetectAsync(ms, ct: context.RequestAborted);
+                        response = new { Mode = "detect", Detections = detections };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    response = new { Error = ex.Message };
+                }
+
+                var json = JsonSerializer.Serialize(response, JsonOpts);
+                var bytes = Encoding.UTF8.GetBytes(json);
+                await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, context.RequestAborted);
+            }
+        }
+        finally
+        {
+            connectionLimit.Release();
         }
     }
 }

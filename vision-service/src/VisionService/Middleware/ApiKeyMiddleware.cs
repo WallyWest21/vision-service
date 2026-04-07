@@ -50,5 +50,6 @@ public class ApiKeyMiddleware
     private static bool IsExemptPath(string path) =>
         path.StartsWith("/health", StringComparison.OrdinalIgnoreCase) ||
         path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase) ||
-        path.StartsWith("/metrics", StringComparison.OrdinalIgnoreCase);
+        path.StartsWith("/metrics", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWith("/ws/", StringComparison.OrdinalIgnoreCase);
 }

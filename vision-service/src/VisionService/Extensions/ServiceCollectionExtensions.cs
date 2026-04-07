@@ -51,6 +51,13 @@ public static class ServiceCollectionExtensions
         services.AddOptions<CorsOptions>()
             .Bind(configuration.GetSection(CorsOptions.SectionName));
 
+        services.AddKeyedSingleton<SemaphoreSlim>("ws-connection-limit", (sp, _) =>
+        {
+            var opts = sp.GetRequiredService<IOptions<PerformanceOptions>>().Value;
+            var max = opts.MaxWebSocketConnections;
+            return new SemaphoreSlim(max, max);
+        });
+
         var corsOptions = configuration.GetSection(CorsOptions.SectionName).Get<CorsOptions>() ?? new CorsOptions();
         services.AddCors(options =>
         {

@@ -27,4 +27,8 @@ public class PerformanceOptions
     /// <summary>Maximum number of concurrent requests forwarded to AI backends. 0 = unlimited. Defaults to 0.</summary>
     [Range(0, 1000)]
     public int MaxConcurrentAiRequests { get; set; } = 0;
+
+    /// <summary>Maximum number of concurrent WebSocket connections. Defaults to 10.</summary>
+    [Range(1, 1000)]
+    public int MaxWebSocketConnections { get; set; } = 10;
 }
