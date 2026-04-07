@@ -15,7 +15,7 @@ public class OptionsTests
         var opts = new YoloOptions();
         opts.BaseUrl.Should().NotBeNullOrEmpty();
         opts.TimeoutSeconds.Should().BeGreaterThan(0);
-        opts.MaxRetries.Should().BeGreaterOrEqualTo(0);
+        opts.MaxRetries.Should().BeGreaterThanOrEqualTo(0);
     }
 
     [Fact]
