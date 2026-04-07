@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vision-service
+  namespace: vision-system
+  labels:
+    app: vision-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vision-service
+  template:
+    metadata:
+      labels:
+        app: vision-service
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: vision-service
+          image: ghcr.io/wallywest21/vision-service:latest
+          ports:
+            - containerPort: 5100
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: vision-service-config
+            - secretRef:
+                name: vision-service-secret
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 5100
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 5100
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: image-storage
+              mountPath: /data/images
+      volumes:
+        - name: image-storage
+          persistentVolumeClaim:
+            claimName: vision-service-images
