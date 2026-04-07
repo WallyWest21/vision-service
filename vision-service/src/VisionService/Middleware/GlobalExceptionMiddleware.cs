@@ -32,8 +32,10 @@ public class GlobalExceptionMiddleware
         }
         catch (BrokenCircuitException ex)
         {
+            var method = SanitizeLogValue(context.Request.Method);
+            var path = SanitizeLogValue(context.Request.Path.Value);
             _logger.LogWarning(ex, "Circuit breaker is open for {Method} {Path} — backend unavailable",
-                context.Request.Method, context.Request.Path);
+                method, path);
 
             if (!context.Response.HasStarted)
             {
@@ -54,8 +56,9 @@ public class GlobalExceptionMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception processing {Method} {Path}",
-                context.Request.Method, context.Request.Path);
+            var method = SanitizeLogValue(context.Request.Method);
+            var path = SanitizeLogValue(context.Request.Path.Value);
+            _logger.LogError(ex, "Unhandled exception processing {Method} {Path}", method, path);
 
             if (!context.Response.HasStarted)
             {
@@ -75,4 +78,8 @@ public class GlobalExceptionMiddleware
             }
         }
     }
+
+    /// <summary>Removes newline and carriage-return characters to prevent log injection.</summary>
+    private static string SanitizeLogValue(string? value) =>
+        (value ?? string.Empty).Replace("\r", "").Replace("\n", "");
 }

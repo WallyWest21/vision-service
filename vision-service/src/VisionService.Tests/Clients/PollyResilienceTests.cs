@@ -165,4 +165,32 @@ public class PollyResilienceTests
         response.IsSuccessStatusCode.Should().BeTrue();
         callCount.Should().Be(maxRetries + 1);
     }
+
+    /// <summary>
+    /// Verifies that the circuit breaker opens after the configured number of consecutive
+    /// <see cref="HttpRequestException"/> failures (not only 5xx response results).
+    /// </summary>
+    [Fact]
+    public async Task CircuitBreakerPolicy_OpensAfterConsecutiveHttpRequestExceptions()
+    {
+        const int threshold = 3;
+
+        var policy = HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .CircuitBreakerAsync(threshold, TimeSpan.FromSeconds(30));
+
+        // Drive consecutive HttpRequestException failures to open the circuit
+        for (int i = 0; i < threshold; i++)
+        {
+            await Assert.ThrowsAsync<HttpRequestException>(() =>
+                policy.ExecuteAsync(() =>
+                    Task.FromException<HttpResponseMessage>(new HttpRequestException("Simulated network failure"))));
+        }
+
+        // The circuit is now open — next execution must throw BrokenCircuitException
+        Func<Task> act = () => policy.ExecuteAsync(() =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
+
+        await act.Should().ThrowAsync<BrokenCircuitException>();
+    }
 }

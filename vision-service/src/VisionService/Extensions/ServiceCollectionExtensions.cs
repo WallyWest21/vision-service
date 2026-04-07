@@ -54,7 +54,7 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection AddYoloClient(this IServiceCollection services, IConfiguration configuration)
     {
-        // Retry policy registered as singleton for efficiency (stateless, safe to share)
+        // Retry policy registered as singleton for efficiency; it holds no mutable cross-request state.
         services.AddKeyedSingleton<IAsyncPolicy<HttpResponseMessage>>("yolo-retry", (sp, _) =>
         {
             var opts = sp.GetRequiredService<IOptions<YoloOptions>>().Value;
@@ -112,7 +112,7 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection AddQwenVlClient(this IServiceCollection services, IConfiguration configuration)
     {
-        // Retry policy registered as singleton for efficiency (stateless, safe to share)
+        // Retry policy registered as singleton for efficiency; it holds no mutable cross-request state.
         services.AddKeyedSingleton<IAsyncPolicy<HttpResponseMessage>>("qwenvl-retry", (sp, _) =>
         {
             var opts = sp.GetRequiredService<IOptions<QwenVlOptions>>().Value;
