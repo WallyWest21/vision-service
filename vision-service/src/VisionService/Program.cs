@@ -13,6 +13,9 @@ using VisionService.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Limit request body size to 20 MB to prevent memory exhaustion
+builder.WebHost.ConfigureKestrel(opts => opts.Limits.MaxRequestBodySize = 20 * 1024 * 1024);
+
 // Serilog
 builder.Host.UseSerilog((context, config) => config
     .ReadFrom.Configuration(context.Configuration)

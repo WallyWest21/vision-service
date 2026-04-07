@@ -38,7 +38,7 @@ public class QwenVlEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         var client = CreateClientWithMockedQwen(mockedQwen);
 
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await client.PostAsync("/api/v1/caption", content);
 
@@ -71,7 +71,7 @@ public class QwenVlEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         var client = CreateClientWithMockedQwen(mockedQwen);
 
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await client.PostAsync("/api/v1/ocr", content);
 

@@ -51,6 +51,7 @@ public static class YoloEndpoints
         IYoloClient yolo,
         IImageService imageService,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         HttpContext httpContext,
         [FromQuery] float confidence = 0.5f,
         CancellationToken ct = default)
@@ -58,6 +59,9 @@ public static class YoloEndpoints
         try
         {
             ValidateConfidence(confidence);
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
             var imageBytes = await ReadBytesAsync(file, ct);
             var cacheKey = cache.ComputeKey(imageBytes, "detect", confidence.ToString("F2"));
             SetETagHeader(httpContext, cacheKey);
@@ -89,12 +93,19 @@ public static class YoloEndpoints
         IEnumerable<IFormFile> files,
         IYoloClient yolo,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         [FromQuery] float confidence = 0.5f,
         CancellationToken ct = default)
     {
         try
         {
             ValidateConfidence(confidence);
+            foreach (var f in files)
+            {
+                var validation = await fileValidator.ValidateAsync(f, ct);
+                if (!validation.IsValid)
+                    return Results.Problem(validation.ErrorMessage, statusCode: 400);
+            }
             var tasks = files.Select(async f =>
             {
                 var imageBytes = await ReadBytesAsync(f, ct);
@@ -123,6 +134,7 @@ public static class YoloEndpoints
         IFormFile file,
         IYoloClient yolo,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         HttpContext httpContext,
         [FromQuery] float confidence = 0.5f,
         CancellationToken ct = default)
@@ -130,6 +142,9 @@ public static class YoloEndpoints
         try
         {
             ValidateConfidence(confidence);
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
             var imageBytes = await ReadBytesAsync(file, ct);
             var cacheKey = cache.ComputeKey(imageBytes, "segment", confidence.ToString("F2"));
             SetETagHeader(httpContext, cacheKey);
@@ -160,6 +175,7 @@ public static class YoloEndpoints
         IFormFile file,
         IYoloClient yolo,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         HttpContext httpContext,
         [FromQuery] int topN = 5,
         CancellationToken ct = default)
@@ -167,6 +183,9 @@ public static class YoloEndpoints
         try
         {
             if (topN < 1 || topN > 100) return Results.Problem("topN must be between 1 and 100", statusCode: 400);
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
             var imageBytes = await ReadBytesAsync(file, ct);
             var cacheKey = cache.ComputeKey(imageBytes, "classify", topN.ToString());
             SetETagHeader(httpContext, cacheKey);
@@ -193,6 +212,7 @@ public static class YoloEndpoints
         IFormFile file,
         IYoloClient yolo,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         HttpContext httpContext,
         [FromQuery] float confidence = 0.5f,
         CancellationToken ct = default)
@@ -200,6 +220,9 @@ public static class YoloEndpoints
         try
         {
             ValidateConfidence(confidence);
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
             var imageBytes = await ReadBytesAsync(file, ct);
             var cacheKey = cache.ComputeKey(imageBytes, "pose", confidence.ToString("F2"));
             SetETagHeader(httpContext, cacheKey);

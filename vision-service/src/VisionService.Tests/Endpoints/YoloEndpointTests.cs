@@ -71,7 +71,7 @@ public class YoloEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         var client = CreateClientWithMockedYolo(mockedYolo);
 
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await client.PostAsync("/api/v1/classify", content);
 

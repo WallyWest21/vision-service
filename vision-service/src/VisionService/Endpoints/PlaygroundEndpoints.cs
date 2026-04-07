@@ -1,4 +1,5 @@
 using VisionService.Clients;
+using VisionService.Services;
 
 namespace VisionService.Endpoints;
 
@@ -21,10 +22,15 @@ public static class PlaygroundEndpoints
         IFormFile file,
         IYoloClient yolo,
         IQwenVlClient qwen,
+        IFileValidationService fileValidator,
         CancellationToken ct = default)
     {
         try
         {
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
+
             byte[] bytes;
             await using (var ms = new MemoryStream())
             {

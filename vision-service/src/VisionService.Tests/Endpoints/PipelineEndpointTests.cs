@@ -42,7 +42,7 @@ public class PipelineEndpointTests : IClassFixture<WebApplicationFactory<Program
 
         var client = CreateClient(yolo, qwen);
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await client.PostAsync("/api/v1/pipeline/detect-and-describe", content);
 
@@ -64,7 +64,7 @@ public class PipelineEndpointTests : IClassFixture<WebApplicationFactory<Program
 
         var client = CreateClient(yolo, qwen);
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await client.PostAsync("/api/v1/pipeline/safety-check", content);
 
@@ -90,7 +90,7 @@ public class PipelineEndpointTests : IClassFixture<WebApplicationFactory<Program
 
         var client = CreateClient(yolo, qwen);
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await client.PostAsync("/api/v1/pipeline/inventory", content);
 
@@ -114,7 +114,7 @@ public class PipelineEndpointTests : IClassFixture<WebApplicationFactory<Program
 
         var client = CreateClient(yolo, qwen);
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await client.PostAsync("/api/v1/pipeline/scene", content);
 
@@ -135,7 +135,7 @@ public class PipelineEndpointTests : IClassFixture<WebApplicationFactory<Program
 
         var client = CreateClient(yolo, qwen);
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await client.PostAsync("/api/v1/pipeline/detect-and-describe", content);
 
