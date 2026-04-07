@@ -27,21 +27,30 @@ public class ModelHealthCheckJob : BackgroundService
     {
         _logger.LogInformation("ModelHealthCheckJob started");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            using var scope = _scopeFactory.CreateScope();
-            var yolo = scope.ServiceProvider.GetRequiredService<IYoloClient>();
-            var qwen = scope.ServiceProvider.GetRequiredService<IQwenVlClient>();
-            var eventBus = scope.ServiceProvider.GetRequiredService<IVisionEventBus>();
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var yolo = scope.ServiceProvider.GetRequiredService<IYoloClient>();
+                var qwen = scope.ServiceProvider.GetRequiredService<IQwenVlClient>();
+                var eventBus = scope.ServiceProvider.GetRequiredService<IVisionEventBus>();
 
-            _yoloWasHealthy = await CheckBackendAsync("YOLO", () => yolo.IsHealthyAsync(stoppingToken),
-                _yoloWasHealthy, eventBus, stoppingToken);
+                _yoloWasHealthy = await CheckBackendAsync("YOLO", () => yolo.IsHealthyAsync(stoppingToken),
+                    _yoloWasHealthy, eventBus, stoppingToken);
 
-            _qwenWasHealthy = await CheckBackendAsync("QwenVL", () => qwen.IsHealthyAsync(stoppingToken),
-                _qwenWasHealthy, eventBus, stoppingToken);
+                _qwenWasHealthy = await CheckBackendAsync("QwenVL", () => qwen.IsHealthyAsync(stoppingToken),
+                    _qwenWasHealthy, eventBus, stoppingToken);
 
-            await Task.Delay(TimeSpan.FromSeconds(_perfOptions.CurrentValue.HealthCheckIntervalSeconds), stoppingToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(_perfOptions.CurrentValue.HealthCheckIntervalSeconds), stoppingToken).ConfigureAwait(false);
+            }
         }
+        catch (OperationCanceledException)
+        {
+            // Expected when the host signals shutdown
+        }
+
+        _logger.LogInformation("Job stopping due to shutdown");
     }
 
     private async Task<bool> CheckBackendAsync(string name, Func<Task<bool>> check,
