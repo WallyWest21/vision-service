@@ -17,6 +17,9 @@ public interface IQwenVlClient
     /// <summary>Analyzes an image with a custom system prompt.</summary>
     Task<VlResponse> AnalyzeAsync(Stream image, string systemPrompt, CancellationToken ct = default);
 
+    /// <summary>Sends a vision request with an explicit system prompt and user message.</summary>
+    Task<VlResponse> AskWithSystemPromptAsync(Stream image, string systemPrompt, string userMessage, CancellationToken ct = default);
+
     /// <summary>Compares two images and describes their differences.</summary>
     Task<VlResponse> CompareAsync(Stream image1, Stream image2, CancellationToken ct = default);
 

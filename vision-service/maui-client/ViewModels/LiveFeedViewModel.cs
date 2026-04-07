@@ -60,6 +60,7 @@ public partial class LiveFeedViewModel : BaseViewModel
     /// <summary>Currently selected AI analysis mode.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowConfidence))]
+    [NotifyPropertyChangedFor(nameof(IsSmartQueryMode))]
     private string _selectedMode = "Detect";
 
     /// <summary>Confidence threshold for detection, segmentation and pose endpoints.</summary>
@@ -114,7 +115,25 @@ public partial class LiveFeedViewModel : BaseViewModel
     public string[] FeedModes { get; } = ["MJPEG Stream", "Snapshot Poll", "Local Camera"];
 
     /// <summary>Available AI analysis modes.</summary>
-    public string[] Modes { get; } = ["Detect", "Segment", "Classify", "Pose"];
+    public string[] Modes { get; } = ["Detect", "Segment", "Classify", "Pose", "Smart Query"];
+
+    /// <summary>Natural-language query specifying which objects to watch for in Smart Query mode.</summary>
+    [ObservableProperty]
+    private string _objectQuery = string.Empty;
+
+    /// <summary>System prompt sent to Qwen-VL in Smart Query mode (pre-filled with the default spatial-identification prompt).</summary>
+    [ObservableProperty]
+    private string _systemPrompt =
+        "You are a real-time vision analysis assistant monitoring a live camera feed. " +
+        "The user will specify one or more objects or conditions to watch for. " +
+        "Your task:\n" +
+        "1. State clearly whether each queried object/condition is PRESENT or ABSENT in the frame.\n" +
+        "2. For each present object, describe its position using spatial terms " +
+        "(top-left, top-center, top-right, center-left, center, center-right, bottom-left, bottom-center, bottom-right) " +
+        "and estimate how much of the frame it occupies (small / medium / large).\n" +
+        "3. Report any additional relevant context (e.g., partial occlusion, number of instances, notable attributes).\n" +
+        "4. Keep responses concise and structured — one bullet per object. " +
+        "Do not describe unrelated scene elements unless directly relevant to the query.";
 
     /// <summary><c>true</c> when the feed is not running.</summary>
     public bool IsNotStreaming => !IsStreaming;
@@ -130,6 +149,9 @@ public partial class LiveFeedViewModel : BaseViewModel
 
     /// <summary><c>true</c> for modes that accept a confidence threshold.</summary>
     public bool ShowConfidence => SelectedMode is "Detect" or "Segment" or "Pose";
+
+    /// <summary><c>true</c> when Smart Query mode is selected.</summary>
+    public bool IsSmartQueryMode => SelectedMode == "Smart Query";
 
     /// <summary>Human-readable status shown in the stats row.</summary>
     public string StatusText => IsStreaming ? "● Live" : "○ Stopped";
@@ -255,13 +277,15 @@ public partial class LiveFeedViewModel : BaseViewModel
             DetectionResponse? detections = null;
             SegmentationResponse? segments = null;
             PoseResponse? poses = null;
+            SmartQueryResponse? smartQuery = null;
             string result = SelectedMode switch
             {
-                "Detect"   => FormatDetections(detections = await _api.DetectAsync(frameBytes, Confidence, ct)),
-                "Segment"  => FormatSegments(segments = await _api.SegmentAsync(frameBytes, Confidence, ct)),
-                "Classify" => FormatClassifications(await _api.ClassifyAsync(frameBytes, ct)),
-                "Pose"     => FormatPoses(poses = await _api.PoseAsync(frameBytes, Confidence, ct)),
-                _          => string.Empty
+                "Detect"      => FormatDetections(detections = await _api.DetectAsync(frameBytes, Confidence, ct)),
+                "Segment"     => FormatSegments(segments = await _api.SegmentAsync(frameBytes, Confidence, ct)),
+                "Classify"    => FormatClassifications(await _api.ClassifyAsync(frameBytes, ct)),
+                "Pose"        => FormatPoses(poses = await _api.PoseAsync(frameBytes, Confidence, ct)),
+                "Smart Query" => FormatSmartQuery(smartQuery = await _api.SmartQueryAsync(frameBytes, ObjectQuery, SystemPrompt, ct)),
+                _             => string.Empty
             };
             sw.Stop();
             var elapsed = sw.Elapsed.TotalMilliseconds;
@@ -270,7 +294,7 @@ public partial class LiveFeedViewModel : BaseViewModel
             {
                 ProcessingTimeMs = elapsed;
                 SetResult(result);
-                CurrentDetections = detections?.Detections ?? [];
+                CurrentDetections = smartQuery?.Detections ?? detections?.Detections ?? [];
                 CurrentSegments = segments?.Segments ?? [];
                 CurrentPoses = poses?.Poses ?? [];
             });
@@ -379,6 +403,18 @@ public partial class LiveFeedViewModel : BaseViewModel
         lines.AppendLine($"Model: {r.Model}  |  {r.ProcessingTimeMs:F0} ms  |  {r.Poses.Count} person/people");
         foreach (var p in r.Poses)
             lines.AppendLine($"  • conf {p.Confidence:P0}  keypoints: {p.Keypoints.Count}");
+        return lines.ToString().TrimEnd();
+    }
+
+    private static string FormatSmartQuery(SmartQueryResponse r)
+    {
+        var lines = new System.Text.StringBuilder();
+        lines.AppendLine($"Query: \"{r.Query}\"  |  {r.ProcessingTimeMs:F0} ms  |  {r.TotalDetections} detection(s)");
+        if (!string.IsNullOrWhiteSpace(r.VlAnalysis))
+        {
+            lines.AppendLine();
+            lines.Append(r.VlAnalysis);
+        }
         return lines.ToString().TrimEnd();
     }
 }

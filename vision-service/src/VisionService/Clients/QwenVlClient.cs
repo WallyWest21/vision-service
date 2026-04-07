@@ -82,6 +82,17 @@ public class QwenVlClient : IQwenVlClient
     }
 
     /// <inheritdoc/>
+    public async Task<VlResponse> AskWithSystemPromptAsync(Stream image, string systemPrompt, string userMessage, CancellationToken ct = default)
+    {
+        var base64 = await ToBase64Async(image, ct);
+        return await CallChatCompletionAsync(
+            systemPrompt: systemPrompt,
+            userText: userMessage,
+            imageBase64: base64,
+            ct: ct);
+    }
+
+    /// <inheritdoc/>
     public async Task<VlResponse> CompareAsync(Stream image1, Stream image2, CancellationToken ct = default)
     {
         var base64_1 = await ToBase64Async(image1, ct);

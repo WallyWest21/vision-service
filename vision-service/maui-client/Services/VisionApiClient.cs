@@ -229,6 +229,25 @@ public class VisionApiClient
         return await ReadAsync<JsonElement>(response);
     }
 
+    /// <summary>POST /api/v1/pipeline/smart-query — YOLO detect + Qwen-VL identify queried objects.</summary>
+    /// <param name="imageBytes">Raw image bytes from the live frame.</param>
+    /// <param name="query">Natural-language description of objects to look for (e.g. "person with a red shirt").</param>
+    /// <param name="systemPrompt">Optional override for the default spatial-identification system prompt.</param>
+    public async Task<SmartQueryResponse> SmartQueryAsync(
+        byte[] imageBytes,
+        string query,
+        string? systemPrompt = null,
+        CancellationToken ct = default)
+    {
+        using var client = CreateClient();
+        var form = BuildImageForm(imageBytes);
+        form.Add(new StringContent(query, Encoding.UTF8), "query");
+        if (!string.IsNullOrWhiteSpace(systemPrompt))
+            form.Add(new StringContent(systemPrompt, Encoding.UTF8), "systemPrompt");
+        var response = await client.PostAsync("api/v1/pipeline/smart-query", form, ct);
+        return await ReadAsync<SmartQueryResponse>(response);
+    }
+
     // ── Admin ────────────────────────────────────────────────────────────────
 
     /// <summary>GET /api/v1/admin/keys — list API keys (masked).</summary>

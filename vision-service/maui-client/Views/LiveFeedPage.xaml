@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:MauiClient.ViewModels"
@@ -78,6 +78,21 @@
                        VerticalOptions="Center"
                        IsVisible="{Binding ShowConfidence}" />
             </HorizontalStackLayout>
+
+            <!-- Smart Query controls (visible only in Smart Query mode) -->
+            <VerticalStackLayout Spacing="8"
+                                 IsVisible="{Binding IsSmartQueryMode}">
+                <Label Text="What to look for:" />
+                <Entry Text="{Binding ObjectQuery}"
+                       Placeholder="e.g. person with red shirt, fire extinguisher, open door"
+                       ClearButtonVisibility="WhileEditing" />
+                <Label Text="System prompt:" />
+                <Editor Text="{Binding SystemPrompt}"
+                        AutoSize="TextChanges"
+                        MinimumHeightRequest="100"
+                        FontSize="11"
+                        FontFamily="Monospace" />
+            </VerticalStackLayout>
 
             <!-- Start / Stop -->
             <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">

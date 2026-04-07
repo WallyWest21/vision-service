@@ -104,6 +104,30 @@ public class VlResponse
     [JsonIgnore] public int TotalTokens => PromptTokens + CompletionTokens;
 }
 
+// ── Pipeline ─────────────────────────────────────────────────────────────────
+
+/// <summary>Response from the <c>/api/v1/pipeline/smart-query</c> endpoint.</summary>
+public class SmartQueryResponse
+{
+    /// <summary>The original user query echoed back.</summary>
+    public string Query { get; set; } = string.Empty;
+
+    /// <summary>YOLO detections found in the frame.</summary>
+    public List<Detection> Detections { get; set; } = [];
+
+    /// <summary>Qwen-VL natural-language analysis of the queried objects.</summary>
+    public string VlAnalysis { get; set; } = string.Empty;
+
+    /// <summary>Total number of objects detected by YOLO.</summary>
+    public int TotalDetections { get; set; }
+
+    /// <summary>Combined processing time in milliseconds.</summary>
+    public double ProcessingTimeMs { get; set; }
+
+    /// <summary>Name of the YOLO model used.</summary>
+    public string YoloModel { get; set; } = string.Empty;
+}
+
 // ── Admin ────────────────────────────────────────────────────────────────────
 
 /// <summary>Masked API key entry returned by the admin list endpoint.</summary>
