@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Polly.CircuitBreaker;
 
 namespace VisionService.Middleware;
 
@@ -29,10 +30,35 @@ public class GlobalExceptionMiddleware
         {
             // Client disconnected — ignore
         }
+        catch (BrokenCircuitException ex)
+        {
+            var method = SanitizeLogValue(context.Request.Method);
+            var path = SanitizeLogValue(context.Request.Path.Value);
+            _logger.LogWarning(ex, "Circuit breaker is open for {Method} {Path} — backend unavailable",
+                method, path);
+
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                context.Response.ContentType = "application/problem+json";
+
+                var problem = new
+                {
+                    type = "https://tools.ietf.org/html/rfc7807",
+                    title = "Service Unavailable",
+                    status = 503,
+                    detail = "A backend circuit breaker is open. The service is temporarily unavailable.",
+                    instance = context.Request.Path.Value
+                };
+
+                await context.Response.WriteAsync(JsonSerializer.Serialize(problem, JsonOptions));
+            }
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception processing {Method} {Path}",
-                context.Request.Method, context.Request.Path);
+            var method = SanitizeLogValue(context.Request.Method);
+            var path = SanitizeLogValue(context.Request.Path.Value);
+            _logger.LogError(ex, "Unhandled exception processing {Method} {Path}", method, path);
 
             if (!context.Response.HasStarted)
             {
@@ -52,4 +78,8 @@ public class GlobalExceptionMiddleware
             }
         }
     }
+
+    /// <summary>Removes newline and carriage-return characters to prevent log injection.</summary>
+    private static string SanitizeLogValue(string? value) =>
+        (value ?? string.Empty).Replace("\r", "").Replace("\n", "");
 }
