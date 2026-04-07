@@ -47,6 +47,34 @@ public class AdminEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
+    public async Task GetSettings_ReturnsOkWithExpectedShape()
+    {
+        var response = await _client.GetAsync("/api/v1/admin/settings");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("rateLimit");
+        content.Should().Contain("cache");
+        content.Should().Contain("performance");
+    }
+
+    [Fact]
+    public async Task UpdateSettings_WithValidDto_ReturnsOk()
+    {
+        var body = new
+        {
+            rateLimit = new { requestsPerMinute = 120, burstSize = 20 },
+            cache = new { enabled = true, defaultTtlSeconds = 60, maxItems = 500 }
+        };
+
+        var response = await _client.PutAsJsonAsync("/api/v1/admin/settings", body);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("updated");
+    }
+
+    [Fact]
     public async Task Playground_WithValidImage_ReturnsOk()
     {
         // Playground uses mocked backends via the real client; since backends are unavailable,

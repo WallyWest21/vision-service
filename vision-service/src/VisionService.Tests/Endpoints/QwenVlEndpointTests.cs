@@ -77,4 +77,41 @@ public class QwenVlEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
+
+    [Fact]
+    public async Task Ask_WithValidImage_ReturnsOk()
+    {
+        var mockedQwen = Substitute.For<IQwenVlClient>();
+        mockedQwen.AskAsync(Arg.Any<Stream>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new VlResponse { Text = "It is a cat.", Model = "test" });
+
+        var client = CreateClientWithMockedQwen(mockedQwen);
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new StringContent("What is in the image?"), "question");
+
+        var response = await client.PostAsync("/api/v1/ask", content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.Should().Contain("cat");
+    }
+
+    [Fact]
+    public async Task Caption_BackendUnavailable_Returns503()
+    {
+        var mockedQwen = Substitute.For<IQwenVlClient>();
+        mockedQwen.CaptionAsync(Arg.Any<Stream>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<VlResponse>(new HttpRequestException("connection refused")));
+
+        var client = CreateClientWithMockedQwen(mockedQwen);
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+
+        var response = await client.PostAsync("/api/v1/caption", content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+    }
 }
