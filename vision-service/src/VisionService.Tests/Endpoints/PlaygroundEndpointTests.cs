@@ -43,7 +43,7 @@ public class PlaygroundEndpointTests : IClassFixture<WebApplicationFactory<Progr
         var client = CreateClient(yolo, qwen);
 
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await client.PostAsync("/api/v1/playground", content);
 
@@ -65,7 +65,7 @@ public class PlaygroundEndpointTests : IClassFixture<WebApplicationFactory<Progr
         var client = CreateClient(yolo, qwen);
 
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await client.PostAsync("/api/v1/playground", content);
 
