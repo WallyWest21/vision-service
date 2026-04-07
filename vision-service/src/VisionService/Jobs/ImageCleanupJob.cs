@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+using VisionService.Configuration;
 using VisionService.Services;
 
 namespace VisionService.Jobs;
@@ -7,13 +9,14 @@ public class ImageCleanupJob : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ImageCleanupJob> _logger;
-    private readonly TimeSpan _interval = TimeSpan.FromHours(6);
+    private readonly IOptionsMonitor<PerformanceOptions> _perfOptions;
 
     /// <summary>Initializes a new instance of <see cref="ImageCleanupJob"/>.</summary>
-    public ImageCleanupJob(IServiceScopeFactory scopeFactory, ILogger<ImageCleanupJob> logger)
+    public ImageCleanupJob(IServiceScopeFactory scopeFactory, ILogger<ImageCleanupJob> logger, IOptionsMonitor<PerformanceOptions> perfOptions)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _perfOptions = perfOptions;
     }
 
     /// <inheritdoc/>
@@ -35,7 +38,7 @@ public class ImageCleanupJob : BackgroundService
                 _logger.LogError(ex, "ImageCleanupJob encountered an error");
             }
 
-            await Task.Delay(_interval, stoppingToken);
+            await Task.Delay(TimeSpan.FromHours(_perfOptions.CurrentValue.ImageCleanupIntervalHours), stoppingToken);
         }
     }
 }

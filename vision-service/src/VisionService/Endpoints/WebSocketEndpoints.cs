@@ -1,7 +1,9 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
 using VisionService.Clients;
+using VisionService.Configuration;
 
 namespace VisionService.Endpoints;
 
@@ -17,7 +19,11 @@ public static class WebSocketEndpoints
         return app;
     }
 
-    private static async Task HandleStreamAsync(HttpContext context, IYoloClient yolo, IQwenVlClient qwen)
+    private static async Task HandleStreamAsync(
+        HttpContext context,
+        IYoloClient yolo,
+        IQwenVlClient qwen,
+        IOptionsMonitor<PerformanceOptions> perfOptions)
     {
         if (!context.WebSockets.IsWebSocketRequest)
         {
@@ -33,7 +39,7 @@ public static class WebSocketEndpoints
             _ => "detect"
         };
 
-        var buffer = new byte[1024 * 1024 * 5]; // 5MB max frame
+        var buffer = new byte[perfOptions.CurrentValue.MaxWebSocketFrameBytes];
 
         while (ws.State == WebSocketState.Open)
         {

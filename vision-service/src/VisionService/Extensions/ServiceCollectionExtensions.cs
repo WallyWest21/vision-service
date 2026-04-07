@@ -41,6 +41,11 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<PerformanceOptions>()
+            .Bind(configuration.GetSection(PerformanceOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddYoloClient(configuration);
         services.AddQwenVlClient(configuration);
         services.AddImageService();
@@ -67,7 +72,7 @@ public static class ServiceCollectionExtensions
         {
             var opts = sp.GetRequiredService<IOptions<QwenVlOptions>>().Value;
             client.BaseAddress = new Uri(opts.BaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(120);
+            client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
         });
         return services;
     }

@@ -130,3 +130,66 @@ public class NewApiKeyResponse
     public string Name { get; set; } = string.Empty;
     public string[] Scopes { get; set; } = [];
 }
+
+// ── Runtime Settings ─────────────────────────────────────────────────────────
+
+/// <summary>All runtime-configurable service settings.</summary>
+public class RuntimeSettings
+{
+    public RateLimitSettings? RateLimit { get; set; }
+    public CacheSettings? Cache { get; set; }
+    public PerformanceSettings? Performance { get; set; }
+    public YoloSettings? Yolo { get; set; }
+    public QwenVlSettings? QwenVl { get; set; }
+    public StorageSettings? Storage { get; set; }
+}
+
+/// <summary>Rate limiting settings.</summary>
+public class RateLimitSettings
+{
+    public int? RequestsPerMinute { get; set; }
+    public int? BurstSize { get; set; }
+}
+
+/// <summary>Response cache settings.</summary>
+public class CacheSettings
+{
+    public bool? Enabled { get; set; }
+    public int? DefaultTtlSeconds { get; set; }
+    public int? MaxItems { get; set; }
+}
+
+/// <summary>Performance tuning settings.</summary>
+public class PerformanceSettings
+{
+    public int? MinAiIntervalMs { get; set; }
+    public int? MaxWebSocketFrameBytes { get; set; }
+    public int? HealthCheckIntervalSeconds { get; set; }
+    public int? ImageCleanupIntervalHours { get; set; }
+    public int? MaxConcurrentAiRequests { get; set; }
+}
+
+/// <summary>YOLO backend settings.</summary>
+public class YoloSettings
+{
+    public string? BaseUrl { get; set; }
+    public int? TimeoutSeconds { get; set; }
+    public int? MaxRetries { get; set; }
+}
+
+/// <summary>Qwen-VL backend settings.</summary>
+public class QwenVlSettings
+{
+    public string? BaseUrl { get; set; }
+    public string? ModelName { get; set; }
+    public int? MaxTokens { get; set; }
+    public double? Temperature { get; set; }
+    public int? TimeoutSeconds { get; set; }
+}
+
+/// <summary>Storage settings.</summary>
+public class StorageSettings
+{
+    public int? RetentionDays { get; set; }
+    public int? MaxFileSizeMb { get; set; }
+}

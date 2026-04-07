@@ -23,4 +23,8 @@ public class QwenVlOptions
     /// <summary>Sampling temperature for text generation.</summary>
     [Range(0.0, 2.0)]
     public double Temperature { get; set; } = 0.7;
+
+    /// <summary>HTTP request timeout in seconds.</summary>
+    [Range(1, 600)]
+    public int TimeoutSeconds { get; set; } = 120;
 }

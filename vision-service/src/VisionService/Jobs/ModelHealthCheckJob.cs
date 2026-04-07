@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Options;
 using VisionService.Clients;
+using VisionService.Configuration;
 using VisionService.Events;
 
 namespace VisionService.Jobs;
@@ -8,15 +10,16 @@ public class ModelHealthCheckJob : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ModelHealthCheckJob> _logger;
-    private readonly TimeSpan _interval = TimeSpan.FromSeconds(30);
+    private readonly IOptionsMonitor<PerformanceOptions> _perfOptions;
     private bool _yoloWasHealthy = true;
     private bool _qwenWasHealthy = true;
 
     /// <summary>Initializes a new instance of <see cref="ModelHealthCheckJob"/>.</summary>
-    public ModelHealthCheckJob(IServiceScopeFactory scopeFactory, ILogger<ModelHealthCheckJob> logger)
+    public ModelHealthCheckJob(IServiceScopeFactory scopeFactory, ILogger<ModelHealthCheckJob> logger, IOptionsMonitor<PerformanceOptions> perfOptions)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _perfOptions = perfOptions;
     }
 
     /// <inheritdoc/>
@@ -37,7 +40,7 @@ public class ModelHealthCheckJob : BackgroundService
             _qwenWasHealthy = await CheckBackendAsync("QwenVL", () => qwen.IsHealthyAsync(stoppingToken),
                 _qwenWasHealthy, eventBus, stoppingToken);
 
-            await Task.Delay(_interval, stoppingToken).ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromSeconds(_perfOptions.CurrentValue.HealthCheckIntervalSeconds), stoppingToken).ConfigureAwait(false);
         }
     }
 

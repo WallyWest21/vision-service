@@ -246,4 +246,26 @@ public class VisionApiClient
         var response = await client.PostAsJsonAsync("api/v1/admin/keys", request, _json, ct);
         return await ReadAsync<NewApiKeyResponse>(response);
     }
+
+    // ── Settings ─────────────────────────────────────────────────────────────
+
+    /// <summary>GET /api/v1/admin/settings — retrieve all runtime settings.</summary>
+    public async Task<RuntimeSettings> GetSettingsAsync(CancellationToken ct = default)
+    {
+        using var client = CreateClient();
+        var response = await client.GetAsync("api/v1/admin/settings", ct);
+        return await ReadAsync<RuntimeSettings>(response);
+    }
+
+    /// <summary>PUT /api/v1/admin/settings — update runtime settings.</summary>
+    public async Task UpdateSettingsAsync(RuntimeSettings settings, CancellationToken ct = default)
+    {
+        using var client = CreateClient();
+        var response = await client.PutAsJsonAsync("api/v1/admin/settings", settings, _json, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var detail = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException(detail, null, response.StatusCode);
+        }
+    }
 }
