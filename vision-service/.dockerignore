@@ -17,3 +17,8 @@ docs/
 .git/
 .github/
 *.md
+
+# Exclude editor and OS artefacts
+node_modules/
+*.user
+*.suo

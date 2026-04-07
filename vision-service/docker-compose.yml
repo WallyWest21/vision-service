@@ -22,7 +22,9 @@ services:
       - AUTH__Enabled=false
       - RATELIMIT__RequestsPerMinute=600
     volumes:
-      - vision-data:/data/images
+      - image-storage:/data/images
+    networks:
+      - vision-net
     depends_on:
       yolo-api:
         condition: service_healthy
@@ -42,22 +44,12 @@ services:
           memory: 1G
 
   qwen-vl:
-    image: vllm/vllm-openai:latest
+    image: ghcr.io/wallywest21/qwen-vl:latest
     container_name: qwen-vl
     ports:
-      - "8001:8000"
-    volumes:
-      - model-cache:/root/.cache/huggingface
-    environment:
-      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
-    command: >
-      --model Qwen/Qwen2.5-VL-3B-Instruct
-      --trust-remote-code
-      --max-model-len 4096
-      --gpu-memory-utilization 0.85
-      --dtype auto
-      --enforce-eager
-      --max-num-seqs 4
+      - "8000:8000"
+    networks:
+      - vision-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -74,15 +66,12 @@ services:
               capabilities: [gpu]
 
   yolo-api:
-    build:
-      context: ./docker/yolo
-      dockerfile: Dockerfile.yolo
+    image: ghcr.io/wallywest21/yolo-api:latest
     container_name: yolo-api
     ports:
-      - "7861:7860"
-    environment:
-      - YOLO_MODEL=yolov8n.pt
-      - CONFIDENCE_THRESHOLD=0.5
+      - "7860:7860"
+    networks:
+      - vision-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
       interval: 15s
@@ -98,6 +87,9 @@ services:
               count: 1
               capabilities: [gpu]
 
+networks:
+  vision-net:
+    driver: bridge
+
 volumes:
-  vision-data:
-  model-cache:
+  image-storage:

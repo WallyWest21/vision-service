@@ -1,0 +1,8 @@
+bin/
+obj/
+*.md
+.git/
+maui-client/
+node_modules/
+*.user
+*.suo

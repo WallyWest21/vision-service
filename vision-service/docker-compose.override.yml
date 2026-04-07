@@ -1,0 +1,16 @@
+# Local development override — automatically merged by Docker Compose.
+#
+# Usage:
+#   docker compose up --build
+#
+# What this changes vs the base docker-compose.yml:
+#   • Sets ASPNETCORE_ENVIRONMENT=Development
+#   • Bind-mounts appsettings.json so local config changes take effect without rebuilding
+
+services:
+  vision-service:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./src/VisionService/appsettings.json:/app/appsettings.json:ro
+      - ./src/VisionService/appsettings.Development.json:/app/appsettings.Development.json:ro
