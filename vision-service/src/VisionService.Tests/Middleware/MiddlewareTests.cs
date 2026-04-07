@@ -67,7 +67,7 @@ public class MiddlewareTests : IClassFixture<WebApplicationFactory<Program>>
         // Verify that the exception middleware does not break normal request flow.
         var client = _factory.CreateClient();
 
-        var response = await client.GetAsync("/health");
+        var response = await client.GetAsync("/health/live");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
@@ -80,7 +80,7 @@ public class MiddlewareTests : IClassFixture<WebApplicationFactory<Program>>
         // Health endpoint is exempt from rate limiting — should always return 200
         for (var i = 0; i < 5; i++)
         {
-            var response = await client.GetAsync("/health");
+            var response = await client.GetAsync("/health/live");
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
     }
