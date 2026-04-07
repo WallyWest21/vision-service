@@ -1,11 +1,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy only the server-side project files for layer caching.
+# Copy only the server-side project file for layer caching.
 # The solution file is intentionally excluded — it references the MAUI client
 # which is not part of the Docker build context.
 COPY src/VisionService/VisionService.csproj src/VisionService/
-COPY src/VisionService.Tests/VisionService.Tests.csproj src/VisionService.Tests/
 RUN dotnet restore src/VisionService/VisionService.csproj
 
 # Copy everything and build
@@ -18,6 +17,9 @@ RUN dotnet publish src/VisionService/VisionService.csproj \
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+
+ENV ASPNETCORE_URLS=http://+:5100
+ENV DOTNET_EnableDiagnostics=0
 
 # Install curl for healthcheck
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
