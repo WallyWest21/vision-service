@@ -53,10 +53,12 @@ services:
     command: >
       --model Qwen/Qwen2.5-VL-7B-Instruct
       --trust-remote-code
-      --max-model-len 4096
-      --gpu-memory-utilization 0.85
+      --max-model-len 2048
+      --gpu-memory-utilization 0.95
       --dtype auto
       --enforce-eager
+      --limit-mm-per-prompt image=1,video=0
+      --max-num-seqs 4
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
