@@ -56,6 +56,7 @@ public static class QwenVlEndpoints
         [FromForm] string question,
         IQwenVlClient qwen,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         HttpContext httpContext,
         CancellationToken ct = default)
     {
@@ -63,6 +64,10 @@ public static class QwenVlEndpoints
         {
             if (string.IsNullOrWhiteSpace(question))
                 return Results.Problem("question is required", statusCode: 400);
+
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
 
             var imageBytes = await ReadBytesAsync(file, ct);
             var cacheKey = cache.ComputeKey(imageBytes, "ask", question);
@@ -85,11 +90,16 @@ public static class QwenVlEndpoints
         IFormFile file,
         IQwenVlClient qwen,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         HttpContext httpContext,
         CancellationToken ct = default)
     {
         try
         {
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
+
             var imageBytes = await ReadBytesAsync(file, ct);
             var cacheKey = cache.ComputeKey(imageBytes, "caption");
             SetETagHeader(httpContext, cacheKey);
@@ -111,11 +121,16 @@ public static class QwenVlEndpoints
         IFormFile file,
         IQwenVlClient qwen,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         HttpContext httpContext,
         CancellationToken ct = default)
     {
         try
         {
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
+
             var imageBytes = await ReadBytesAsync(file, ct);
             var cacheKey = cache.ComputeKey(imageBytes, "ocr");
             SetETagHeader(httpContext, cacheKey);
@@ -138,6 +153,7 @@ public static class QwenVlEndpoints
         [FromForm] string systemPrompt,
         IQwenVlClient qwen,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         HttpContext httpContext,
         CancellationToken ct = default)
     {
@@ -145,6 +161,10 @@ public static class QwenVlEndpoints
         {
             if (string.IsNullOrWhiteSpace(systemPrompt))
                 return Results.Problem("systemPrompt is required", statusCode: 400);
+
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
 
             var imageBytes = await ReadBytesAsync(file, ct);
             var cacheKey = cache.ComputeKey(imageBytes, "analyze", systemPrompt);
@@ -168,11 +188,17 @@ public static class QwenVlEndpoints
         IFormFile file2,
         IQwenVlClient qwen,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         HttpContext httpContext,
         CancellationToken ct = default)
     {
         try
         {
+            var v1 = await fileValidator.ValidateAsync(file1, ct);
+            if (!v1.IsValid) return Results.Problem(v1.ErrorMessage, statusCode: 400);
+            var v2 = await fileValidator.ValidateAsync(file2, ct);
+            if (!v2.IsValid) return Results.Problem(v2.ErrorMessage, statusCode: 400);
+
             var bytes1 = await ReadBytesAsync(file1, ct);
             var bytes2 = await ReadBytesAsync(file2, ct);
             // Combine bytes of both images for a deterministic cache key
@@ -200,11 +226,16 @@ public static class QwenVlEndpoints
         IFormFile file,
         IQwenVlClient qwen,
         IResponseCacheService cache,
+        IFileValidationService fileValidator,
         HttpContext httpContext,
         CancellationToken ct = default)
     {
         try
         {
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
+
             var imageBytes = await ReadBytesAsync(file, ct);
             var cacheKey = cache.ComputeKey(imageBytes, "describe-detailed");
             SetETagHeader(httpContext, cacheKey);

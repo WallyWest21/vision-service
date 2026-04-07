@@ -52,7 +52,7 @@ public class AdminEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         // Playground uses mocked backends via the real client; since backends are unavailable,
         // we just check that the endpoint exists and returns a handled response (503 is fine here).
         using var content = new MultipartFormDataContent();
-        content.Add(new ByteArrayContent([0x01]), "file", "test.jpg");
+        content.Add(new ByteArrayContent([0xFF, 0xD8, 0xFF]), "file", "test.jpg");
 
         var response = await _client.PostAsync("/api/v1/playground", content);
 

@@ -85,6 +85,7 @@ public static class ServiceCollectionExtensions
         services.AddYoloClient(configuration);
         services.AddQwenVlClient(configuration);
         services.AddImageService();
+        services.AddFileValidationService();
         services.AddVisionEventBus();
         services.AddResponseCacheService();
 
@@ -210,6 +211,12 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddImageService(this IServiceCollection services)
     {
         services.AddScoped<IImageService, ImageService>();
+        return services;
+    }
+
+    private static IServiceCollection AddFileValidationService(this IServiceCollection services)
+    {
+        services.AddSingleton<IFileValidationService, FileValidationService>();
         return services;
     }
 

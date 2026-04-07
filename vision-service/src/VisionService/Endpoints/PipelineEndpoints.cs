@@ -1,5 +1,6 @@
 using VisionService.Clients;
 using VisionService.Models;
+using VisionService.Services;
 
 namespace VisionService.Endpoints;
 
@@ -42,10 +43,15 @@ public static class PipelineEndpoints
         IFormFile file,
         IYoloClient yolo,
         IQwenVlClient qwen,
+        IFileValidationService fileValidator,
         CancellationToken ct = default)
     {
         try
         {
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
+
             byte[] imageBytes;
             await using (var ms = new MemoryStream())
             {
@@ -74,10 +80,15 @@ public static class PipelineEndpoints
         IFormFile file,
         IYoloClient yolo,
         IQwenVlClient qwen,
+        IFileValidationService fileValidator,
         CancellationToken ct = default)
     {
         try
         {
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
+
             byte[] imageBytes;
             await using (var ms = new MemoryStream())
             {
@@ -113,10 +124,15 @@ public static class PipelineEndpoints
         IFormFile file,
         IYoloClient yolo,
         IQwenVlClient qwen,
+        IFileValidationService fileValidator,
         CancellationToken ct = default)
     {
         try
         {
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
+
             byte[] imageBytes;
             await using (var ms = new MemoryStream())
             {
@@ -156,10 +172,15 @@ public static class PipelineEndpoints
         IFormFile file,
         IYoloClient yolo,
         IQwenVlClient qwen,
+        IFileValidationService fileValidator,
         CancellationToken ct = default)
     {
         try
         {
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
+
             byte[] imageBytes;
             await using (var ms = new MemoryStream())
             {
