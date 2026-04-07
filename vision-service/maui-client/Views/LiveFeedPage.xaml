@@ -105,6 +105,11 @@
                     <Image Source="{Binding CurrentFrame}"
                            Aspect="AspectFit"
                            IsVisible="{Binding IsFrameAvailable}" />
+                    <GraphicsView x:Name="BoundingBoxOverlay"
+                                  IsVisible="{Binding IsFrameAvailable}"
+                                  HorizontalOptions="Fill"
+                                  VerticalOptions="Fill"
+                                  InputTransparent="True" />
                 </Grid>
             </Border>
 

@@ -17,6 +17,8 @@ public partial class LiveFeedViewModel : BaseViewModel
     private CancellationTokenSource? _cts;
     private readonly Queue<long> _frameTimes = new();
     private bool _processingFrame;
+    private long _lastAiCallTick;
+    private const int MinAiIntervalMs = 500;
 
     /// <summary>Stream or snapshot URL to connect to.</summary>
     [ObservableProperty]
@@ -87,6 +89,26 @@ public partial class LiveFeedViewModel : BaseViewModel
     /// <summary>Processing time of the most recent AI call in milliseconds.</summary>
     [ObservableProperty]
     private double _processingTimeMs;
+
+    /// <summary>Current frame detections used for the bounding box overlay.</summary>
+    [ObservableProperty]
+    private IReadOnlyList<Detection> _currentDetections = [];
+
+    /// <summary>Current frame segmentation results used for the bounding box overlay.</summary>
+    [ObservableProperty]
+    private IReadOnlyList<Segmentation> _currentSegments = [];
+
+    /// <summary>Current frame pose results used for the bounding box overlay.</summary>
+    [ObservableProperty]
+    private IReadOnlyList<PoseResult> _currentPoses = [];
+
+    /// <summary>Natural pixel width of the current frame, used to map bounding box coordinates.</summary>
+    [ObservableProperty]
+    private float _imageNaturalWidth;
+
+    /// <summary>Natural pixel height of the current frame, used to map bounding box coordinates.</summary>
+    [ObservableProperty]
+    private float _imageNaturalHeight;
 
     /// <summary>Available feed modes.</summary>
     public string[] FeedModes { get; } = ["MJPEG Stream", "Snapshot Poll", "Local Camera"];
@@ -193,6 +215,9 @@ public partial class LiveFeedViewModel : BaseViewModel
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;
+        CurrentDetections = [];
+        CurrentSegments = [];
+        CurrentPoses = [];
     }
 
     private bool CanStart() => !IsStreaming &&
@@ -204,26 +229,38 @@ public partial class LiveFeedViewModel : BaseViewModel
     {
         // Always update the live preview image regardless of AI processing state
         var copy = frameBytes;
+        var (imgW, imgH) = ReadImageDimensions(frameBytes);
         MainThread.BeginInvokeOnMainThread(() =>
         {
             CurrentFrame = ImageSource.FromStream(() => new MemoryStream(copy));
             FrameCount++;
             UpdateFps();
+            if (imgW > 0 && imgH > 0)
+            {
+                ImageNaturalWidth = imgW;
+                ImageNaturalHeight = imgH;
+            }
         });
 
-        // Skip AI call if previous analysis is still running
+        // Skip AI call if previous analysis is still running or throttle interval not elapsed
         if (_processingFrame) return;
+        var nowTick = Environment.TickCount64;
+        if (nowTick - _lastAiCallTick < MinAiIntervalMs) return;
         _processingFrame = true;
+        _lastAiCallTick = nowTick;
 
         try
         {
             var sw = Stopwatch.StartNew();
+            DetectionResponse? detections = null;
+            SegmentationResponse? segments = null;
+            PoseResponse? poses = null;
             string result = SelectedMode switch
             {
-                "Detect"   => FormatDetections(await _api.DetectAsync(frameBytes, Confidence, ct)),
-                "Segment"  => FormatSegments(await _api.SegmentAsync(frameBytes, Confidence, ct)),
+                "Detect"   => FormatDetections(detections = await _api.DetectAsync(frameBytes, Confidence, ct)),
+                "Segment"  => FormatSegments(segments = await _api.SegmentAsync(frameBytes, Confidence, ct)),
                 "Classify" => FormatClassifications(await _api.ClassifyAsync(frameBytes, ct)),
-                "Pose"     => FormatPoses(await _api.PoseAsync(frameBytes, Confidence, ct)),
+                "Pose"     => FormatPoses(poses = await _api.PoseAsync(frameBytes, Confidence, ct)),
                 _          => string.Empty
             };
             sw.Stop();
@@ -233,6 +270,9 @@ public partial class LiveFeedViewModel : BaseViewModel
             {
                 ProcessingTimeMs = elapsed;
                 SetResult(result);
+                CurrentDetections = detections?.Detections ?? [];
+                CurrentSegments = segments?.Segments ?? [];
+                CurrentPoses = poses?.Poses ?? [];
             });
         }
         catch (OperationCanceledException) { throw; }
@@ -244,6 +284,48 @@ public partial class LiveFeedViewModel : BaseViewModel
         {
             _processingFrame = false;
         }
+    }
+
+    /// <summary>
+    /// Extracts the pixel dimensions from the header of a JPEG or PNG byte array
+    /// without fully decoding the image.
+    /// </summary>
+    private static (int Width, int Height) ReadImageDimensions(byte[] data)
+    {
+        if (data.Length < 24) return (0, 0);
+
+        // PNG: 8-byte signature, then IHDR chunk — width at offset 16, height at 20
+        if (data[0] == 0x89 && data[1] == 0x50)
+        {
+            return (
+                (data[16] << 24) | (data[17] << 16) | (data[18] << 8) | data[19],
+                (data[20] << 24) | (data[21] << 16) | (data[22] << 8) | data[23]
+            );
+        }
+
+        // JPEG: scan for SOF0–SOF3 markers (0xFFC0–0xFFC3)
+        if (data[0] == 0xFF && data[1] == 0xD8)
+        {
+            int pos = 2;
+            while (pos + 3 < data.Length)
+            {
+                if (data[pos] != 0xFF) break;
+                byte marker = data[pos + 1];
+                if (marker == 0xD9) break; // EOI
+                if (marker is >= 0xC0 and <= 0xC3 && pos + 8 < data.Length)
+                {
+                    return (
+                        (data[pos + 7] << 8) | data[pos + 8],
+                        (data[pos + 5] << 8) | data[pos + 6]
+                    );
+                }
+                int segLen = (data[pos + 2] << 8) | data[pos + 3];
+                if (segLen < 2) break;
+                pos += 2 + segLen;
+            }
+        }
+
+        return (0, 0);
     }
 
     private void UpdateFps()
