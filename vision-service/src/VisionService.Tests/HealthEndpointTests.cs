@@ -17,7 +17,7 @@ public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task Health_ReturnsOk()
     {
-        var response = await _client.GetAsync("/health");
+        var response = await _client.GetAsync("/health/live");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
@@ -25,7 +25,7 @@ public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task Health_ReturnsServiceName()
     {
-        var response = await _client.GetAsync("/health");
+        var response = await _client.GetAsync("/health/live");
         var content = await response.Content.ReadAsStringAsync();
 
         content.Should().Contain("VisionService");

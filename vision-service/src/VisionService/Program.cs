@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
 using Prometheus;
 using Serilog;
 using VisionService.Endpoints;
 using VisionService.Extensions;
+using VisionService.HealthChecks;
 using VisionService.Jobs;
 using VisionService.Middleware;
 
@@ -35,6 +37,11 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+// Health checks
+builder.Services.AddHealthChecks()
+    .AddCheck<YoloHealthCheck>("yolo", tags: ["ready"])
+    .AddCheck<QwenVlHealthCheck>("qwen-vl", tags: ["ready"]);
 
 // Vision services (options, clients, image service, event bus)
 builder.Services.AddVisionServices(builder.Configuration);
@@ -75,16 +82,23 @@ app.UseWebSockets();
 app.UseMetricServer();
 app.UseHttpMetrics();
 
-// Health check
-app.MapGet("/health", () => Results.Ok(new
+// Health endpoints
+app.MapHealthChecks("/health", new HealthCheckOptions
 {
-    Status = "Healthy",
-    Timestamp = DateTime.UtcNow,
-    Service = "VisionService",
-    Version = "1.0.0"
-}))
-.WithName("HealthCheck")
-.WithOpenApi();
+    ResponseWriter = HealthCheckResponseWriter.WriteResponse
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = HealthCheckResponseWriter.WriteResponse
+});
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = HealthCheckResponseWriter.WriteResponse
+});
 
 // YOLO endpoints
 app.MapYoloEndpoints();
