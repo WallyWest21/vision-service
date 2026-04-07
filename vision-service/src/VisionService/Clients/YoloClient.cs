@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using VisionService.Configuration;
+using VisionService.Diagnostics;
 using VisionService.Models;
 
 namespace VisionService.Clients;
@@ -26,16 +28,21 @@ public class YoloClient : IYoloClient
     /// <inheritdoc/>
     public async Task<IReadOnlyList<Detection>> DetectAsync(Stream image, float confidence = 0.5f, CancellationToken ct = default)
     {
+        using var activity = VisionActivitySource.Source.StartActivity("YoloClient.Detect");
+        activity?.SetTag("yolo.confidence", confidence);
         using var content = BuildMultipartContent(image, confidence);
         try
         {
             var response = await _http.PostAsync("/detect", content, ct);
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<YoloDetectResponse>(JsonOptions, ct);
-            return result?.Detections ?? [];
+            var detections = result?.Detections ?? [];
+            activity?.SetTag("yolo.detection_count", detections.Count);
+            return detections;
         }
         catch (Exception ex)
         {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             _logger.LogError(ex, "YOLO detect request failed");
             throw;
         }

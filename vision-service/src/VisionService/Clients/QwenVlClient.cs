@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using VisionService.Configuration;
+using VisionService.Diagnostics;
 using VisionService.Models;
 
 namespace VisionService.Clients;
@@ -39,12 +41,21 @@ public class QwenVlClient : IQwenVlClient
     /// <inheritdoc/>
     public async Task<VlResponse> CaptionAsync(Stream image, CancellationToken ct = default)
     {
+        using var activity = VisionActivitySource.Source.StartActivity("QwenVlClient.Caption");
         var base64 = await ToBase64Async(image, ct);
-        return await CallChatCompletionAsync(
-            systemPrompt: "You are a vision assistant that describes images precisely and concisely.",
-            userText: "Describe this image in detail.",
-            imageBase64: base64,
-            ct: ct);
+        try
+        {
+            return await CallChatCompletionAsync(
+                systemPrompt: "You are a vision assistant that describes images precisely and concisely.",
+                userText: "Describe this image in detail.",
+                imageBase64: base64,
+                ct: ct);
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            throw;
+        }
     }
 
     /// <inheritdoc/>
