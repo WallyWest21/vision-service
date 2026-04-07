@@ -23,7 +23,7 @@ public class CorsTests : IClassFixture<WebApplicationFactory<Program>>
         })
             .CreateClient();
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/health");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/health/live");
         request.Headers.Add("Origin", "https://example.com");
 
         var response = await client.SendAsync(request);
@@ -38,7 +38,7 @@ public class CorsTests : IClassFixture<WebApplicationFactory<Program>>
     {
         var client = _factory.CreateClient();
 
-        using var request = new HttpRequestMessage(HttpMethod.Options, "/health");
+        using var request = new HttpRequestMessage(HttpMethod.Options, "/health/live");
         request.Headers.Add("Origin", "https://example.com");
         request.Headers.Add("Access-Control-Request-Method", "GET");
 
@@ -53,7 +53,7 @@ public class CorsTests : IClassFixture<WebApplicationFactory<Program>>
     {
         var client = _factory.CreateClient();
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/health");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/health/live");
         request.Headers.Add("Origin", "https://any-origin.com");
 
         var response = await client.SendAsync(request);
