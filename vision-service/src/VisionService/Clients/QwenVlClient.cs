@@ -54,6 +54,7 @@ public class QwenVlClient : IQwenVlClient
         catch (Exception ex)
         {
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            _logger.LogError(ex, "Qwen-VL caption request failed");
             throw;
         }
     }
