@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vision-service
+  namespace: vision-system
+  labels:
+    app: vision-service
+  annotations:
+    # TLS termination — replace with your cert-manager issuer or secret name
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: "REPLACE_WITH_CLUSTER_ISSUER"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - REPLACE_WITH_HOSTNAME
+      secretName: vision-service-tls
+  rules:
+    - host: REPLACE_WITH_HOSTNAME
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vision-service
+                port:
+                  number: 5100

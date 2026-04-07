@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vision-service-config
+  namespace: vision-system
+  labels:
+    app: vision-service
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:5100"
+  Yolo__BaseUrl: "http://yolo-api:7860"
+  Yolo__TimeoutSeconds: "30"
+  Yolo__MaxRetries: "3"
+  Yolo__CircuitBreakerThreshold: "5"
+  Yolo__CircuitBreakerDurationSeconds: "30"
+  QwenVl__BaseUrl: "http://qwen-vl:8000"
+  QwenVl__ModelName: "Qwen/Qwen2.5-VL-7B-Instruct"
+  QwenVl__MaxTokens: "1024"
+  QwenVl__Temperature: "0.7"
+  QwenVl__TimeoutSeconds: "120"
+  QwenVl__MaxRetries: "3"
+  QwenVl__CircuitBreakerThreshold: "5"
+  QwenVl__CircuitBreakerDurationSeconds: "30"
+  Storage__ImageStoragePath: "/data/images"
+  Storage__RetentionDays: "7"
+  Storage__MaxFileSizeMb: "20"
+  RateLimit__RequestsPerMinute: "600"
+  RateLimit__BurstSize: "50"
+  Cache__Enabled: "true"
+  Cache__DefaultTtlSeconds: "600"
+  Cache__MaxItems: "1000"
+  Performance__MinAiIntervalMs: "500"
+  Performance__MaxWebSocketFrameBytes: "5242880"
+  Performance__HealthCheckIntervalSeconds: "30"
+  Performance__ImageCleanupIntervalHours: "6"
+  Performance__MaxConcurrentAiRequests: "0"
