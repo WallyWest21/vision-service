@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Polly.CircuitBreaker;
 
 namespace VisionService.Middleware;
 
@@ -28,6 +29,28 @@ public class GlobalExceptionMiddleware
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
         {
             // Client disconnected — ignore
+        }
+        catch (BrokenCircuitException ex)
+        {
+            _logger.LogWarning(ex, "Circuit breaker is open for {Method} {Path} — backend unavailable",
+                context.Request.Method, context.Request.Path);
+
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                context.Response.ContentType = "application/problem+json";
+
+                var problem = new
+                {
+                    type = "https://tools.ietf.org/html/rfc7807",
+                    title = "Service Unavailable",
+                    status = 503,
+                    detail = "A backend circuit breaker is open. The service is temporarily unavailable.",
+                    instance = context.Request.Path.Value
+                };
+
+                await context.Response.WriteAsync(JsonSerializer.Serialize(problem, JsonOptions));
+            }
         }
         catch (Exception ex)
         {
