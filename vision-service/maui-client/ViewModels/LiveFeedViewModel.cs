@@ -199,6 +199,7 @@ public partial class LiveFeedViewModel : BaseViewModel
     private async Task StartStreamAsync()
     {
         _cts = new CancellationTokenSource();
+        var token = _cts.Token;
         IsStreaming = true;
         FrameCount = 0;
         _frameTimes.Clear();
@@ -208,14 +209,14 @@ public partial class LiveFeedViewModel : BaseViewModel
         {
             if (IsLocalCameraMode)
             {
-                await foreach (var frame in _localCamera.CaptureFramesAsync(SelectedCameraDevice!.Id, _cts.Token))
-                    await ProcessFrameAsync(frame, _cts.Token);
+                await foreach (var frame in _localCamera.CaptureFramesAsync(SelectedCameraDevice!.Id, token))
+                    await ProcessFrameAsync(frame, token);
             }
             else
             {
                 int interval = IsSnapshotMode ? PollIntervalMs : 500;
-                await foreach (var frame in _streamReader.ReadFramesAsync(StreamUrl, interval, _cts.Token))
-                    await ProcessFrameAsync(frame, _cts.Token);
+                await foreach (var frame in _streamReader.ReadFramesAsync(StreamUrl, interval, token))
+                    await ProcessFrameAsync(frame, token);
             }
         }
         catch (OperationCanceledException) { }
