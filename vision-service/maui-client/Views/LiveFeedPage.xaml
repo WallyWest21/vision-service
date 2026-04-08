@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:MauiClient.ViewModels"
@@ -7,115 +7,154 @@
              Title="{Binding Title}">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="12" Padding="24">
+        <VerticalStackLayout Spacing="16" Padding="24,32">
 
+            <!-- Page heading -->
             <Label Text="Live Feed"
                    Style="{StaticResource Headline}"
-                   HorizontalOptions="Center" />
+                   HorizontalOptions="Start" />
 
-            <!-- URL entry (hidden in Local Camera mode) -->
-            <Label Text="Stream or Snapshot URL:"
-                   IsVisible="{Binding IsUrlMode}" />
-            <Entry Text="{Binding StreamUrl}"
-                   Placeholder="e.g. http://camera-host/mjpeg  or  /snapshot.jpg"
-                   ClearButtonVisibility="WhileEditing"
-                   IsVisible="{Binding IsUrlMode}" />
+            <Label Text="Stream from a camera and run real-time AI analysis on every frame."
+                   Style="{StaticResource Caption}"
+                   Margin="0,-8,0,8" />
 
-            <!-- Feed mode + poll interval -->
+            <!-- ─── Source Configuration ──────────────────────── -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="SOURCE"
+                           Style="{StaticResource SectionHeading}" />
+
+                    <!-- Feed mode picker -->
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="Mode"
+                               Style="{StaticResource FormLabel}" />
+                        <Picker ItemsSource="{Binding FeedModes}"
+                                SelectedItem="{Binding SelectedFeedMode}"
+                                WidthRequest="180"
+                                VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                    <!-- URL entry (hidden in Local Camera mode) -->
+                    <VerticalStackLayout Spacing="6"
+                                         IsVisible="{Binding IsUrlMode}">
+                        <Label Text="Stream URL"
+                               Style="{StaticResource FormLabel}" />
+                        <Entry Text="{Binding StreamUrl}"
+                               Placeholder="http://camera-host/mjpeg  or  /snapshot.jpg"
+                               ClearButtonVisibility="WhileEditing" />
+                    </VerticalStackLayout>
+
+                    <!-- Snapshot poll interval -->
+                    <HorizontalStackLayout Spacing="12"
+                                           IsVisible="{Binding IsSnapshotMode}">
+                        <Label Text="Poll interval"
+                               Style="{StaticResource FormLabel}" />
+                        <Entry Text="{Binding PollIntervalMs, StringFormat='{0}'}"
+                               Keyboard="Numeric"
+                               WidthRequest="80"
+                               VerticalOptions="Center" />
+                        <Label Text="ms"
+                               Style="{StaticResource Caption}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                    <!-- Local camera device selection -->
+                    <VerticalStackLayout Spacing="8"
+                                         IsVisible="{Binding IsLocalCameraMode}">
+                        <HorizontalStackLayout Spacing="12">
+                            <Label Text="Camera"
+                                   Style="{StaticResource FormLabel}" />
+                            <Picker ItemsSource="{Binding CameraDevices}"
+                                    SelectedItem="{Binding SelectedCameraDevice}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    WidthRequest="240"
+                                    VerticalOptions="Center" />
+                            <Button Text="Scan"
+                                    Command="{Binding ScanCamerasCommand}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    WidthRequest="80"
+                                    VerticalOptions="Center" />
+                            <ActivityIndicator IsRunning="{Binding IsScanningCameras}"
+                                               IsVisible="{Binding IsScanningCameras}"
+                                               WidthRequest="20" HeightRequest="20"
+                                               VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ─── AI Configuration ─────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="AI MODEL"
+                           Style="{StaticResource SectionHeading}" />
+
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="Mode"
+                               Style="{StaticResource FormLabel}" />
+                        <Picker ItemsSource="{Binding Modes}"
+                                SelectedItem="{Binding SelectedMode}"
+                                WidthRequest="150"
+                                VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                    <!-- Confidence threshold -->
+                    <HorizontalStackLayout Spacing="12"
+                                           IsVisible="{Binding ShowConfidence}">
+                        <Label Text="Confidence"
+                               Style="{StaticResource FormLabel}" />
+                        <Slider Minimum="0.1" Maximum="1.0"
+                                Value="{Binding Confidence}"
+                                WidthRequest="200"
+                                VerticalOptions="Center" />
+                        <Label Text="{Binding Confidence, StringFormat='{0:P0}'}"
+                               Style="{StaticResource StatValue}"
+                               WidthRequest="46" />
+                    </HorizontalStackLayout>
+
+                    <!-- Smart Query fields -->
+                    <VerticalStackLayout Spacing="8"
+                                         IsVisible="{Binding IsSmartQueryMode}">
+                        <Label Text="Objects to watch for"
+                               Style="{StaticResource FormLabel}" />
+                        <Entry Text="{Binding ObjectQuery}"
+                               Placeholder="e.g. person with red shirt, fire extinguisher"
+                               ClearButtonVisibility="WhileEditing" />
+
+                        <Label Text="System prompt"
+                               Style="{StaticResource FormLabel}" />
+                        <Editor Text="{Binding SystemPrompt}"
+                                AutoSize="TextChanges"
+                                MinimumHeightRequest="80"
+                                FontSize="11"
+                                FontFamily="Monospace" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ─── Controls ─────────────────────────────────── -->
             <HorizontalStackLayout Spacing="12" HorizontalOptions="Start">
-                <Label Text="Feed mode:" VerticalOptions="Center" />
-                <Picker ItemsSource="{Binding FeedModes}"
-                        SelectedItem="{Binding SelectedFeedMode}"
-                        WidthRequest="180"
-                        VerticalOptions="Center" />
-                <Label Text="Poll interval (ms):"
-                       VerticalOptions="Center"
-                       IsVisible="{Binding IsSnapshotMode}" />
-                <Entry Text="{Binding PollIntervalMs, StringFormat='{0}'}"
-                       Keyboard="Numeric"
-                       WidthRequest="80"
-                       VerticalOptions="Center"
-                       IsVisible="{Binding IsSnapshotMode}" />
-            </HorizontalStackLayout>
-
-            <!-- Local camera device selection -->
-            <HorizontalStackLayout Spacing="12"
-                                   HorizontalOptions="Start"
-                                   IsVisible="{Binding IsLocalCameraMode}">
-                <Label Text="Camera:" VerticalOptions="Center" />
-                <Picker ItemsSource="{Binding CameraDevices}"
-                        SelectedItem="{Binding SelectedCameraDevice}"
-                        ItemDisplayBinding="{Binding Name}"
-                        WidthRequest="260"
-                        VerticalOptions="Center" />
-                <Button Text="⟳  Scan"
-                        Command="{Binding ScanCamerasCommand}"
-                        WidthRequest="90"
-                        VerticalOptions="Center" />
-                <ActivityIndicator IsRunning="{Binding IsScanningCameras}"
-                                   IsVisible="{Binding IsScanningCameras}"
-                                   VerticalOptions="Center"
-                                   WidthRequest="24" HeightRequest="24" />
-            </HorizontalStackLayout>
-
-            <!-- AI mode + confidence -->
-            <HorizontalStackLayout Spacing="12" HorizontalOptions="Start">
-                <Label Text="AI mode:" VerticalOptions="Center" />
-                <Picker ItemsSource="{Binding Modes}"
-                        SelectedItem="{Binding SelectedMode}"
-                        WidthRequest="140"
-                        VerticalOptions="Center" />
-                <Label Text="Confidence:"
-                       VerticalOptions="Center"
-                       IsVisible="{Binding ShowConfidence}" />
-                <Slider Minimum="0.1" Maximum="1.0"
-                        Value="{Binding Confidence}"
-                        WidthRequest="180"
-                        VerticalOptions="Center"
-                        IsVisible="{Binding ShowConfidence}" />
-                <Label Text="{Binding Confidence, StringFormat='{0:P0}'}"
-                       WidthRequest="46"
-                       VerticalOptions="Center"
-                       IsVisible="{Binding ShowConfidence}" />
-            </HorizontalStackLayout>
-
-            <!-- Smart Query controls (visible only in Smart Query mode) -->
-            <VerticalStackLayout Spacing="8"
-                                 IsVisible="{Binding IsSmartQueryMode}">
-                <Label Text="What to look for:" />
-                <Entry Text="{Binding ObjectQuery}"
-                       Placeholder="e.g. person with red shirt, fire extinguisher, open door"
-                       ClearButtonVisibility="WhileEditing" />
-                <Label Text="System prompt:" />
-                <Editor Text="{Binding SystemPrompt}"
-                        AutoSize="TextChanges"
-                        MinimumHeightRequest="100"
-                        FontSize="11"
-                        FontFamily="Monospace" />
-            </VerticalStackLayout>
-
-            <!-- Start / Stop -->
-            <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
-                <Button Text="▶  Start Feed"
+                <Button Text="Start"
                         Command="{Binding StartStreamCommand}"
-                        WidthRequest="160" />
-                <Button Text="■  Stop Feed"
+                        Style="{StaticResource AccentButton}"
+                        WidthRequest="140" />
+                <Button Text="Stop"
                         Command="{Binding StopStreamCommand}"
-                        BackgroundColor="{StaticResource Danger}"
-                        WidthRequest="160" />
+                        Style="{StaticResource DangerButton}"
+                        WidthRequest="140" />
             </HorizontalStackLayout>
 
-            <!-- Live preview -->
-            <Border StrokeShape="RoundRectangle 8"
+            <!-- ─── Live Preview ─────────────────────────────── -->
+            <Border StrokeShape="RoundRectangle 4"
                     StrokeThickness="1"
-                    Stroke="{StaticResource Gray300}"
-                    HeightRequest="380"
+                    HeightRequest="400"
+                    Padding="0"
                     BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray950}}">
                 <Grid>
-                    <Label Text="No frame received yet."
+                    <Label Text="Waiting for frames…"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"
-                           TextColor="{StaticResource Gray400}"
+                           Style="{StaticResource Caption}"
                            IsVisible="{Binding IsFrameNotAvailable}" />
                     <Image Source="{Binding CurrentFrame}"
                            Aspect="AspectFit"
@@ -128,29 +167,33 @@
                 </Grid>
             </Border>
 
-            <!-- Live stats row -->
-            <HorizontalStackLayout Spacing="24"
-                                   HorizontalOptions="Center"
-                                   IsVisible="{Binding IsStreaming}">
-                <Label Text="{Binding Fps, StringFormat='FPS: {0:F1}'}"
-                       FontAttributes="Bold" />
-                <Label Text="{Binding FrameCount, StringFormat='Frames: {0:N0}'}" />
-                <Label Text="{Binding ProcessingTimeMs, StringFormat='AI: {0:F0} ms'}" />
-                <Label Text="{Binding StatusText}"
-                       TextColor="{StaticResource Success}"
-                       FontAttributes="Bold" />
-            </HorizontalStackLayout>
+            <!-- ─── Live Metrics ─────────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}"
+                    Padding="16,12"
+                    IsVisible="{Binding IsStreaming}">
+                <HorizontalStackLayout Spacing="24">
+                    <Label Text="{Binding StatusText}"
+                           Style="{StaticResource StatusLabel}"
+                           TextColor="{StaticResource Success}" />
+                    <Label Text="{Binding Fps, StringFormat='FPS {0:F1}'}"
+                           Style="{StaticResource StatValue}" />
+                    <Label Text="{Binding FrameCount, StringFormat='Frames {0:N0}'}"
+                           Style="{StaticResource StatValue}" />
+                    <Label Text="{Binding ProcessingTimeMs, StringFormat='AI {0:F0} ms'}"
+                           Style="{StaticResource StatValue}" />
+                </HorizontalStackLayout>
+            </Border>
 
-            <!-- Results -->
-            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
-                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
-                    StrokeThickness="1"
-                    StrokeShape="RoundRectangle 8"
-                    Padding="12">
-                <Label Text="{Binding ResultText}"
-                       FontFamily="Monospace"
-                       FontSize="12"
-                       LineBreakMode="WordWrap" />
+            <!-- ─── Results ──────────────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}"
+                    IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="ANALYSIS"
+                           Style="{StaticResource SectionHeading}" />
+                    <Label Text="{Binding ResultText}"
+                           Style="{StaticResource Mono}" />
+                </VerticalStackLayout>
             </Border>
 
         </VerticalStackLayout>

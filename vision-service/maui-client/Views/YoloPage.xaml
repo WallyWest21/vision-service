@@ -7,65 +7,92 @@
              Title="{Binding Title}">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="12" Padding="24">
+        <VerticalStackLayout Spacing="16" Padding="24,32">
 
-            <Label Text="YOLO Object Analysis"
+            <!-- Page heading -->
+            <Label Text="Object Detection"
                    Style="{StaticResource Headline}"
-                   HorizontalOptions="Center" />
+                   HorizontalOptions="Start" />
 
-            <!-- Image picker -->
-            <Button Text="Pick Image"
-                    Command="{Binding PickImageCommand}"
-                    HorizontalOptions="Center"
-                    WidthRequest="180" />
+            <Label Text="Upload an image for YOLO-powered detection, segmentation, classification, or pose estimation."
+                   Style="{StaticResource Caption}"
+                   Margin="0,-8,0,8" />
 
-            <Image Source="{Binding PreviewImage}"
-                   HeightRequest="200"
-                   Aspect="AspectFit"
-                   IsVisible="{Binding PreviewImage, Converter={StaticResource NullToBoolConverter}}" />
+            <!-- Image selection card -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="INPUT"
+                           Style="{StaticResource SectionHeading}" />
 
-            <!-- Confidence slider -->
-            <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
-                <Label Text="Confidence:" VerticalOptions="Center" />
-                <Slider Minimum="0.1" Maximum="1.0"
-                        Value="{Binding Confidence}"
-                        WidthRequest="200"
-                        VerticalOptions="Center" />
-                <Label Text="{Binding Confidence, StringFormat='{0:P0}'}"
-                       WidthRequest="50"
-                       VerticalOptions="Center" />
-            </HorizontalStackLayout>
+                    <Button Text="Select Image"
+                            Command="{Binding PickImageCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            HorizontalOptions="Start"
+                            WidthRequest="160" />
 
-            <!-- Action buttons -->
-            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto"
-                  ColumnSpacing="8" RowSpacing="8">
-                <Button Grid.Row="0" Grid.Column="0"
-                        Text="Detect"
-                        Command="{Binding DetectCommand}" />
-                <Button Grid.Row="0" Grid.Column="1"
-                        Text="Segment"
-                        Command="{Binding SegmentCommand}" />
-                <Button Grid.Row="1" Grid.Column="0"
-                        Text="Classify"
-                        Command="{Binding ClassifyCommand}" />
-                <Button Grid.Row="1" Grid.Column="1"
-                        Text="Pose"
-                        Command="{Binding PoseCommand}" />
-            </Grid>
+                    <Border StrokeShape="RoundRectangle 4"
+                            HeightRequest="200"
+                            Padding="0"
+                            IsVisible="{Binding PreviewImage, Converter={StaticResource NullToBoolConverter}}">
+                        <Image Source="{Binding PreviewImage}"
+                               Aspect="AspectFit" />
+                    </Border>
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               HorizontalOptions="Center" />
+                    <!-- Confidence control -->
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="Confidence"
+                               Style="{StaticResource FormLabel}" />
+                        <Slider Minimum="0.1" Maximum="1.0"
+                                Value="{Binding Confidence}"
+                                WidthRequest="200"
+                                VerticalOptions="Center" />
+                        <Label Text="{Binding Confidence, StringFormat='{0:P0}'}"
+                               Style="{StaticResource StatValue}"
+                               WidthRequest="46" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
 
-            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
-                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
-                    StrokeThickness="1"
-                    StrokeShape="RoundRectangle 8"
-                    Padding="12">
-                <Label Text="{Binding ResultText}"
-                       FontFamily="Monospace"
-                       FontSize="12"
-                       LineBreakMode="WordWrap" />
+            <!-- Analysis actions card -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="ANALYSIS"
+                           Style="{StaticResource SectionHeading}" />
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto"
+                          ColumnSpacing="10" RowSpacing="10">
+                        <Button Grid.Row="0" Grid.Column="0"
+                                Text="Detect"
+                                Command="{Binding DetectCommand}"
+                                Style="{StaticResource AccentButton}" />
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Text="Segment"
+                                Command="{Binding SegmentCommand}" />
+                        <Button Grid.Row="1" Grid.Column="0"
+                                Text="Classify"
+                                Command="{Binding ClassifyCommand}" />
+                        <Button Grid.Row="1" Grid.Column="1"
+                                Text="Pose"
+                                Command="{Binding PoseCommand}" />
+                    </Grid>
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       HorizontalOptions="Start"
+                                       WidthRequest="24" HeightRequest="24" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Results card -->
+            <Border Style="{StaticResource SectionCard}"
+                    IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="RESULT"
+                           Style="{StaticResource SectionHeading}" />
+                    <Label Text="{Binding ResultText}"
+                           Style="{StaticResource Mono}" />
+                </VerticalStackLayout>
             </Border>
 
         </VerticalStackLayout>

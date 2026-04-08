@@ -7,61 +7,85 @@
              Title="{Binding Title}">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="12" Padding="24">
+        <VerticalStackLayout Spacing="16" Padding="24,32">
 
-            <Label Text="Admin — API Key Management"
+            <!-- Page heading -->
+            <Label Text="Admin"
                    Style="{StaticResource Headline}"
-                   HorizontalOptions="Center" />
+                   HorizontalOptions="Start" />
 
-            <!-- List keys -->
-            <Button Text="List API Keys"
-                    Command="{Binding ListKeysCommand}"
-                    IsEnabled="{Binding IsNotBusy}"
-                    HorizontalOptions="Center"
-                    WidthRequest="200" />
+            <Label Text="Manage API keys for the Vision Service."
+                   Style="{StaticResource Caption}"
+                   Margin="0,-8,0,8" />
 
-            <!-- New key form -->
-            <Label Text="Create New API Key" FontAttributes="Bold" Margin="0,8,0,0" />
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto"
-                  ColumnSpacing="8" RowSpacing="8">
-                <Label Grid.Row="0" Grid.Column="0" Text="Name:" VerticalOptions="Center" />
-                <Entry Grid.Row="0" Grid.Column="1"
-                       Text="{Binding NewKeyName}"
-                       Placeholder="e.g. dev-key"
-                       ClearButtonVisibility="WhileEditing" />
+            <!-- ─── Existing Keys ────────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="API KEYS"
+                           Style="{StaticResource SectionHeading}" />
 
-                <Label Grid.Row="1" Grid.Column="0" Text="Scopes:" VerticalOptions="Center" />
-                <Entry Grid.Row="1" Grid.Column="1"
-                       Text="{Binding NewKeyScopes}"
-                       Placeholder="detect,analyze,admin"
-                       ClearButtonVisibility="WhileEditing" />
+                    <Button Text="List Keys"
+                            Command="{Binding ListKeysCommand}"
+                            IsEnabled="{Binding IsNotBusy}"
+                            Style="{StaticResource AccentButton}"
+                            HorizontalOptions="Start"
+                            WidthRequest="140" />
+                </VerticalStackLayout>
+            </Border>
 
-                <Label Grid.Row="2" Grid.Column="0" Text="RPM:" VerticalOptions="Center" />
-                <Entry Grid.Row="2" Grid.Column="1"
-                       Text="{Binding NewKeyRpm}"
-                       Keyboard="Numeric"
-                       Placeholder="60" />
-            </Grid>
+            <!-- ─── Create New Key ───────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="CREATE KEY"
+                           Style="{StaticResource SectionHeading}" />
 
-            <Button Text="Create Key"
-                    Command="{Binding AddKeyCommand}"
-                    IsEnabled="{Binding IsNotBusy}"
-                    HorizontalOptions="Start"
-                    WidthRequest="160" />
+                    <Grid ColumnDefinitions="80,*" RowDefinitions="Auto,Auto,Auto"
+                          ColumnSpacing="12" RowSpacing="10">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Name"
+                               Style="{StaticResource FormLabel}" />
+                        <Entry Grid.Row="0" Grid.Column="1"
+                               Text="{Binding NewKeyName}"
+                               Placeholder="e.g. dev-key"
+                               ClearButtonVisibility="WhileEditing" />
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               HorizontalOptions="Center" />
+                        <Label Grid.Row="1" Grid.Column="0" Text="Scopes"
+                               Style="{StaticResource FormLabel}" />
+                        <Entry Grid.Row="1" Grid.Column="1"
+                               Text="{Binding NewKeyScopes}"
+                               Placeholder="detect,analyze,admin"
+                               ClearButtonVisibility="WhileEditing" />
 
-            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
-                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
-                    StrokeThickness="1"
-                    StrokeShape="RoundRectangle 8"
-                    Padding="12">
-                <Label Text="{Binding ResultText}"
-                       FontFamily="Monospace"
-                       FontSize="12"
-                       LineBreakMode="WordWrap" />
+                        <Label Grid.Row="2" Grid.Column="0" Text="RPM"
+                               Style="{StaticResource FormLabel}" />
+                        <Entry Grid.Row="2" Grid.Column="1"
+                               Text="{Binding NewKeyRpm}"
+                               Keyboard="Numeric"
+                               Placeholder="60" />
+                    </Grid>
+
+                    <Button Text="Create"
+                            Command="{Binding AddKeyCommand}"
+                            IsEnabled="{Binding IsNotBusy}"
+                            HorizontalOptions="Start"
+                            WidthRequest="120" />
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       HorizontalOptions="Start"
+                                       WidthRequest="24" HeightRequest="24" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ─── Results ──────────────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}"
+                    IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="RESULT"
+                           Style="{StaticResource SectionHeading}" />
+                    <Label Text="{Binding ResultText}"
+                           Style="{StaticResource Mono}" />
+                </VerticalStackLayout>
             </Border>
 
         </VerticalStackLayout>

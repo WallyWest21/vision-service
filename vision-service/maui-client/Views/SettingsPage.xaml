@@ -7,164 +7,242 @@
              Title="{Binding Title}">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="12" Padding="24">
+        <VerticalStackLayout Spacing="16" Padding="24,32">
 
+            <!-- Page heading -->
             <Label Text="Settings"
                    Style="{StaticResource Headline}"
-                   HorizontalOptions="Center" />
+                   HorizontalOptions="Start" />
 
-            <!-- ── Connection ─────────────────────────────── -->
-            <Label Text="Service URL:" />
-            <Entry Text="{Binding ServiceUrl}"
-                   Placeholder="http://localhost:5100"
-                   ClearButtonVisibility="WhileEditing"
-                   Keyboard="Url" />
+            <Label Text="Configure client connection and tune server-side performance parameters."
+                   Style="{StaticResource Caption}"
+                   Margin="0,-8,0,8" />
 
-            <Label Text="API Key (X-Api-Key header):" />
-            <Entry Text="{Binding ApiKey}"
-                   Placeholder="Leave blank to skip auth"
-                   IsPassword="False"
-                   ClearButtonVisibility="WhileEditing" />
+            <!-- ═══ Connection ════════════════════════════════ -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="CONNECTION"
+                           Style="{StaticResource SectionHeading}" />
 
-            <HorizontalStackLayout Spacing="12">
-                <Button Text="Save"
-                        Command="{Binding SaveCommand}"
-                        WidthRequest="120" />
-                <Button Text="Load Saved"
-                        Command="{Binding LoadCommand}"
-                        WidthRequest="140" />
-            </HorizontalStackLayout>
+                    <Label Text="Service URL"
+                           Style="{StaticResource FormLabel}" />
+                    <Entry Text="{Binding ServiceUrl}"
+                           Placeholder="http://localhost:5100"
+                           ClearButtonVisibility="WhileEditing"
+                           Keyboard="Url" />
 
-            <BoxView HeightRequest="1" Color="{StaticResource Gray500}" Margin="0,8" />
+                    <Label Text="API Key"
+                           Style="{StaticResource FormLabel}" />
+                    <Entry Text="{Binding ApiKey}"
+                           Placeholder="Leave blank to skip auth"
+                           IsPassword="False"
+                           ClearButtonVisibility="WhileEditing" />
 
-            <!-- ── Server Settings ────────────────────────── -->
-            <Label Text="Server Performance Settings"
-                   Style="{StaticResource Headline}"
-                   HorizontalOptions="Center" />
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Save"
+                                Command="{Binding SaveCommand}"
+                                Style="{StaticResource AccentButton}"
+                                WidthRequest="110" />
+                        <Button Text="Load Saved"
+                                Command="{Binding LoadCommand}"
+                                Style="{StaticResource SecondaryButton}"
+                                WidthRequest="120" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
 
-            <HorizontalStackLayout Spacing="12">
-                <Button Text="⬇ Load from Server"
+            <!-- ═══ Server Settings Header ═══════════════════ -->
+            <HorizontalStackLayout Spacing="12" Margin="0,8,0,0">
+                <Button Text="Load from Server"
                         Command="{Binding LoadServerSettingsCommand}"
-                        WidthRequest="180" />
-                <Button Text="⬆ Save to Server"
+                        Style="{StaticResource SecondaryButton}"
+                        WidthRequest="160" />
+                <Button Text="Save to Server"
                         Command="{Binding SaveServerSettingsCommand}"
-                        WidthRequest="180" />
+                        WidthRequest="160" />
                 <ActivityIndicator IsRunning="{Binding IsLoadingServerSettings}"
                                    IsVisible="{Binding IsLoadingServerSettings}"
-                                   WidthRequest="24" HeightRequest="24" />
+                                   WidthRequest="20" HeightRequest="20"
+                                   VerticalOptions="Center" />
             </HorizontalStackLayout>
 
-            <!-- Rate Limiting -->
-            <Label Text="Rate Limiting" FontAttributes="Bold" FontSize="16" Margin="0,8,0,0" />
+            <!-- ═══ Rate Limiting ════════════════════════════ -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="RATE LIMITING"
+                           Style="{StaticResource SectionHeading}" />
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="16" RowDefinitions="Auto,Auto" RowSpacing="8">
-                <VerticalStackLayout Grid.Column="0" Grid.Row="0">
-                    <Label Text="{Binding RequestsPerMinute, StringFormat='Requests/min: {0}'}" />
-                    <Slider Minimum="100" Maximum="10000" Value="{Binding RequestsPerMinute}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="20" RowSpacing="6">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="{Binding RequestsPerMinute, StringFormat='Requests / min: {0}'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="100" Maximum="10000"
+                                    Value="{Binding RequestsPerMinute}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="{Binding BurstSize, StringFormat='Burst size: {0}'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="10" Maximum="1000"
+                                    Value="{Binding BurstSize}" />
+                        </VerticalStackLayout>
+                    </Grid>
                 </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="1" Grid.Row="0">
-                    <Label Text="{Binding BurstSize, StringFormat='Burst size: {0}'}" />
-                    <Slider Minimum="10" Maximum="1000" Value="{Binding BurstSize}" />
-                </VerticalStackLayout>
-            </Grid>
+            </Border>
 
-            <!-- Cache -->
-            <Label Text="Cache" FontAttributes="Bold" FontSize="16" Margin="0,8,0,0" />
+            <!-- ═══ Cache ════════════════════════════════════ -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="CACHE"
+                           Style="{StaticResource SectionHeading}" />
 
-            <Grid ColumnDefinitions="Auto,*,*" ColumnSpacing="16" RowDefinitions="Auto" RowSpacing="8">
-                <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
-                    <Label Text="Enabled:" VerticalOptions="Center" />
-                    <Switch IsToggled="{Binding CacheEnabled}" />
-                </HorizontalStackLayout>
-                <VerticalStackLayout Grid.Column="1">
-                    <Label Text="{Binding CacheTtlSeconds, StringFormat='TTL: {0}s'}" />
-                    <Slider Minimum="1" Maximum="3600" Value="{Binding CacheTtlSeconds}" />
+                    <Grid ColumnDefinitions="Auto,*,*" ColumnSpacing="20" RowSpacing="6">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                            <Label Text="Enabled"
+                                   Style="{StaticResource FormLabel}" />
+                            <Switch IsToggled="{Binding CacheEnabled}" />
+                        </HorizontalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="{Binding CacheTtlSeconds, StringFormat='TTL: {0}s'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="1" Maximum="3600"
+                                    Value="{Binding CacheTtlSeconds}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" Spacing="4">
+                            <Label Text="{Binding CacheMaxItems, StringFormat='Max items: {0}'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="100" Maximum="100000"
+                                    Value="{Binding CacheMaxItems}" />
+                        </VerticalStackLayout>
+                    </Grid>
                 </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="2">
-                    <Label Text="{Binding CacheMaxItems, StringFormat='Max items: {0}'}" />
-                    <Slider Minimum="100" Maximum="100000" Value="{Binding CacheMaxItems}" />
-                </VerticalStackLayout>
-            </Grid>
+            </Border>
 
-            <!-- Performance -->
-            <Label Text="Performance" FontAttributes="Bold" FontSize="16" Margin="0,8,0,0" />
+            <!-- ═══ Performance ══════════════════════════════ -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="PERFORMANCE"
+                           Style="{StaticResource SectionHeading}" />
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-                <VerticalStackLayout Grid.Column="0" Grid.Row="0">
-                    <Label Text="{Binding MinAiIntervalMs, StringFormat='Min AI interval: {0}ms'}" />
-                    <Slider Minimum="50" Maximum="5000" Value="{Binding MinAiIntervalMs}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="20" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+                        <VerticalStackLayout Grid.Column="0" Grid.Row="0" Spacing="4">
+                            <Label Text="{Binding MinAiIntervalMs, StringFormat='Min AI interval: {0} ms'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="50" Maximum="5000"
+                                    Value="{Binding MinAiIntervalMs}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Grid.Row="0" Spacing="4">
+                            <Label Text="{Binding MaxWebSocketFrameMb, StringFormat='WS max frame: {0} MB'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="1" Maximum="50"
+                                    Value="{Binding MaxWebSocketFrameMb}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="0" Grid.Row="1" Spacing="4">
+                            <Label Text="{Binding HealthCheckIntervalSeconds, StringFormat='Health check: {0}s'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="5" Maximum="600"
+                                    Value="{Binding HealthCheckIntervalSeconds}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Grid.Row="1" Spacing="4">
+                            <Label Text="{Binding ImageCleanupIntervalHours, StringFormat='Cleanup: {0}h'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="1" Maximum="168"
+                                    Value="{Binding ImageCleanupIntervalHours}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="0" Grid.Row="2" Spacing="4">
+                            <Label Text="{Binding MaxConcurrentAiRequests, StringFormat='Max concurrent AI: {0}'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="0" Maximum="100"
+                                    Value="{Binding MaxConcurrentAiRequests}" />
+                        </VerticalStackLayout>
+                    </Grid>
                 </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="1" Grid.Row="0">
-                    <Label Text="{Binding MaxWebSocketFrameMb, StringFormat='WS max frame: {0} MB'}" />
-                    <Slider Minimum="1" Maximum="50" Value="{Binding MaxWebSocketFrameMb}" />
-                </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="0" Grid.Row="1">
-                    <Label Text="{Binding HealthCheckIntervalSeconds, StringFormat='Health check: {0}s'}" />
-                    <Slider Minimum="5" Maximum="600" Value="{Binding HealthCheckIntervalSeconds}" />
-                </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="1" Grid.Row="1">
-                    <Label Text="{Binding ImageCleanupIntervalHours, StringFormat='Cleanup interval: {0}h'}" />
-                    <Slider Minimum="1" Maximum="168" Value="{Binding ImageCleanupIntervalHours}" />
-                </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="0" Grid.Row="2">
-                    <Label Text="{Binding MaxConcurrentAiRequests, StringFormat='Max concurrent AI: {0} (0=∞)'}" />
-                    <Slider Minimum="0" Maximum="100" Value="{Binding MaxConcurrentAiRequests}" />
-                </VerticalStackLayout>
-            </Grid>
+            </Border>
 
-            <!-- YOLO Backend -->
-            <Label Text="YOLO Backend" FontAttributes="Bold" FontSize="16" Margin="0,8,0,0" />
+            <!-- ═══ YOLO Backend ═════════════════════════════ -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="YOLO BACKEND"
+                           Style="{StaticResource SectionHeading}" />
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="16" RowDefinitions="Auto" RowSpacing="8">
-                <VerticalStackLayout Grid.Column="0">
-                    <Label Text="{Binding YoloTimeoutSeconds, StringFormat='Timeout: {0}s'}" />
-                    <Slider Minimum="1" Maximum="300" Value="{Binding YoloTimeoutSeconds}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="20" RowSpacing="6">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="{Binding YoloTimeoutSeconds, StringFormat='Timeout: {0}s'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="1" Maximum="300"
+                                    Value="{Binding YoloTimeoutSeconds}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="{Binding YoloMaxRetries, StringFormat='Max retries: {0}'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="0" Maximum="10"
+                                    Value="{Binding YoloMaxRetries}" />
+                        </VerticalStackLayout>
+                    </Grid>
                 </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="1">
-                    <Label Text="{Binding YoloMaxRetries, StringFormat='Max retries: {0}'}" />
-                    <Slider Minimum="0" Maximum="10" Value="{Binding YoloMaxRetries}" />
-                </VerticalStackLayout>
-            </Grid>
+            </Border>
 
-            <!-- Qwen-VL Backend -->
-            <Label Text="Qwen-VL Backend" FontAttributes="Bold" FontSize="16" Margin="0,8,0,0" />
+            <!-- ═══ Qwen-VL Backend ══════════════════════════ -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="QWEN-VL BACKEND"
+                           Style="{StaticResource SectionHeading}" />
 
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16" RowDefinitions="Auto" RowSpacing="8">
-                <VerticalStackLayout Grid.Column="0">
-                    <Label Text="{Binding QwenVlMaxTokens, StringFormat='Max tokens: {0}'}" />
-                    <Slider Minimum="64" Maximum="8192" Value="{Binding QwenVlMaxTokens}" />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="20" RowSpacing="6">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="{Binding QwenVlMaxTokens, StringFormat='Max tokens: {0}'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="64" Maximum="8192"
+                                    Value="{Binding QwenVlMaxTokens}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="{Binding QwenVlTemperature, StringFormat='Temperature: {0:F1}'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="0" Maximum="2"
+                                    Value="{Binding QwenVlTemperature}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" Spacing="4">
+                            <Label Text="{Binding QwenVlTimeoutSeconds, StringFormat='Timeout: {0}s'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="10" Maximum="600"
+                                    Value="{Binding QwenVlTimeoutSeconds}" />
+                        </VerticalStackLayout>
+                    </Grid>
                 </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="1">
-                    <Label Text="{Binding QwenVlTemperature, StringFormat='Temperature: {0:F1}'}" />
-                    <Slider Minimum="0" Maximum="2" Value="{Binding QwenVlTemperature}" />
-                </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="2">
-                    <Label Text="{Binding QwenVlTimeoutSeconds, StringFormat='Timeout: {0}s'}" />
-                    <Slider Minimum="10" Maximum="600" Value="{Binding QwenVlTimeoutSeconds}" />
-                </VerticalStackLayout>
-            </Grid>
+            </Border>
 
-            <!-- Storage -->
-            <Label Text="Storage" FontAttributes="Bold" FontSize="16" Margin="0,8,0,0" />
+            <!-- ═══ Storage ══════════════════════════════════ -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="STORAGE"
+                           Style="{StaticResource SectionHeading}" />
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="16" RowDefinitions="Auto" RowSpacing="8">
-                <VerticalStackLayout Grid.Column="0">
-                    <Label Text="{Binding RetentionDays, StringFormat='Retention: {0} days'}" />
-                    <Slider Minimum="1" Maximum="365" Value="{Binding RetentionDays}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="20" RowSpacing="6">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="{Binding RetentionDays, StringFormat='Retention: {0} days'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="1" Maximum="365"
+                                    Value="{Binding RetentionDays}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="{Binding MaxFileSizeMb, StringFormat='Max upload: {0} MB'}"
+                                   Style="{StaticResource Caption}" />
+                            <Slider Minimum="1" Maximum="100"
+                                    Value="{Binding MaxFileSizeMb}" />
+                        </VerticalStackLayout>
+                    </Grid>
                 </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="1">
-                    <Label Text="{Binding MaxFileSizeMb, StringFormat='Max upload: {0} MB'}" />
-                    <Slider Minimum="1" Maximum="100" Value="{Binding MaxFileSizeMb}" />
-                </VerticalStackLayout>
-            </Grid>
+            </Border>
 
-            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
-                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
-                    StrokeThickness="1"
-                    StrokeShape="RoundRectangle 8"
-                    Padding="12">
-                <Label Text="{Binding ResultText}"
-                       FontSize="13" />
+            <!-- ═══ Result ═══════════════════════════════════ -->
+            <Border Style="{StaticResource SectionCard}"
+                    IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="STATUS"
+                           Style="{StaticResource SectionHeading}" />
+                    <Label Text="{Binding ResultText}"
+                           FontSize="13" />
+                </VerticalStackLayout>
             </Border>
 
         </VerticalStackLayout>

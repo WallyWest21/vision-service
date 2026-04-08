@@ -7,55 +7,83 @@
              Title="{Binding Title}">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="12" Padding="24">
+        <VerticalStackLayout Spacing="16" Padding="24,32">
 
-            <Label Text="Pipeline (YOLO + Qwen-VL)"
+            <!-- Page heading -->
+            <Label Text="Pipeline"
                    Style="{StaticResource Headline}"
-                   HorizontalOptions="Center" />
+                   HorizontalOptions="Start" />
 
-            <Button Text="Pick Image"
-                    Command="{Binding PickImageCommand}"
-                    HorizontalOptions="Center"
-                    WidthRequest="180" />
+            <Label Text="Combined YOLO detection and Qwen-VL language analysis in a single pass."
+                   Style="{StaticResource Caption}"
+                   Margin="0,-8,0,8" />
 
-            <Image Source="{Binding PreviewImage}"
-                   HeightRequest="200"
-                   Aspect="AspectFit"
-                   IsVisible="{Binding PreviewImage, Converter={StaticResource NullToBoolConverter}}" />
+            <!-- ─── Image Input ──────────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="INPUT"
+                           Style="{StaticResource SectionHeading}" />
 
-            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto"
-                  ColumnSpacing="8" RowSpacing="8">
-                <Button Grid.Row="0" Grid.Column="0"
-                        Text="Detect + Describe"
-                        Command="{Binding DetectAndDescribeCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
-                <Button Grid.Row="0" Grid.Column="1"
-                        Text="Safety Check"
-                        Command="{Binding SafetyCheckCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
-                <Button Grid.Row="1" Grid.Column="0"
-                        Text="Inventory"
-                        Command="{Binding InventoryCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
-                <Button Grid.Row="1" Grid.Column="1"
-                        Text="Scene Analysis"
-                        Command="{Binding SceneCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
-            </Grid>
+                    <Button Text="Select Image"
+                            Command="{Binding PickImageCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            HorizontalOptions="Start"
+                            WidthRequest="160" />
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               HorizontalOptions="Center" />
+                    <Border StrokeShape="RoundRectangle 4"
+                            HeightRequest="200"
+                            Padding="0"
+                            IsVisible="{Binding PreviewImage, Converter={StaticResource NullToBoolConverter}}">
+                        <Image Source="{Binding PreviewImage}"
+                               Aspect="AspectFit" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
 
-            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
-                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
-                    StrokeThickness="1"
-                    StrokeShape="RoundRectangle 8"
-                    Padding="12">
-                <Label Text="{Binding ResultText}"
-                       FontFamily="Monospace"
-                       FontSize="11"
-                       LineBreakMode="WordWrap" />
+            <!-- ─── Pipeline Actions ─────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="PIPELINES"
+                           Style="{StaticResource SectionHeading}" />
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto"
+                          ColumnSpacing="10" RowSpacing="10">
+                        <Button Grid.Row="0" Grid.Column="0"
+                                Text="Detect + Describe"
+                                Command="{Binding DetectAndDescribeCommand}"
+                                IsEnabled="{Binding IsNotBusy}"
+                                Style="{StaticResource AccentButton}" />
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Text="Safety Check"
+                                Command="{Binding SafetyCheckCommand}"
+                                IsEnabled="{Binding IsNotBusy}" />
+                        <Button Grid.Row="1" Grid.Column="0"
+                                Text="Inventory"
+                                Command="{Binding InventoryCommand}"
+                                IsEnabled="{Binding IsNotBusy}" />
+                        <Button Grid.Row="1" Grid.Column="1"
+                                Text="Scene Analysis"
+                                Command="{Binding SceneCommand}"
+                                IsEnabled="{Binding IsNotBusy}" />
+                    </Grid>
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       HorizontalOptions="Start"
+                                       WidthRequest="24" HeightRequest="24" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ─── Results ──────────────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}"
+                    IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="RESULT"
+                           Style="{StaticResource SectionHeading}" />
+                    <Label Text="{Binding ResultText}"
+                           Style="{StaticResource Mono}" />
+                </VerticalStackLayout>
             </Border>
 
         </VerticalStackLayout>

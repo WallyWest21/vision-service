@@ -3,27 +3,25 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:views="clr-namespace:MauiClient.Views"
        x:Class="MauiClient.AppShell"
-       Title="Vision Service Client"
+       Title="Vision Service"
        Shell.NavBarIsVisible="True">
+
+    <!-- Dieter Rams: navigation should be self-evident and unobtrusive.
+         Tabs ordered by frequency of use — the tool stays out of the way. -->
 
     <TabBar>
 
-        <ShellContent Title="Health"
-                      Icon="health.png"
-                      ContentTemplate="{DataTemplate views:HealthPage}"
-                      Route="HealthPage" />
-
-        <ShellContent Title="YOLO"
-                      Icon="yolo.png"
-                      ContentTemplate="{DataTemplate views:YoloPage}"
-                      Route="YoloPage" />
-
-        <ShellContent Title="Live Feed"
+        <ShellContent Title="Live"
                       Icon="yolo.png"
                       ContentTemplate="{DataTemplate views:LiveFeedPage}"
                       Route="LiveFeedPage" />
 
-        <ShellContent Title="Qwen-VL"
+        <ShellContent Title="Detect"
+                      Icon="yolo.png"
+                      ContentTemplate="{DataTemplate views:YoloPage}"
+                      Route="YoloPage" />
+
+        <ShellContent Title="Vision"
                       Icon="qwen.png"
                       ContentTemplate="{DataTemplate views:QwenVlPage}"
                       Route="QwenVlPage" />
@@ -32,6 +30,11 @@
                       Icon="pipeline.png"
                       ContentTemplate="{DataTemplate views:PipelinePage}"
                       Route="PipelinePage" />
+
+        <ShellContent Title="Health"
+                      Icon="health.png"
+                      ContentTemplate="{DataTemplate views:HealthPage}"
+                      Route="HealthPage" />
 
         <ShellContent Title="Admin"
                       Icon="admin.png"

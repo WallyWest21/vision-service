@@ -7,31 +7,47 @@
              Title="{Binding Title}">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="16" Padding="24">
+        <VerticalStackLayout Spacing="16" Padding="24,32">
 
-            <Label Text="Vision Service — Health Check"
+            <!-- Page heading -->
+            <Label Text="Health"
                    Style="{StaticResource Headline}"
-                   HorizontalOptions="Center" />
+                   HorizontalOptions="Start" />
 
-            <Button Text="Check Health"
-                    Command="{Binding CheckHealthCommand}"
-                    IsEnabled="{Binding IsNotBusy}"
-                    HorizontalOptions="Center"
-                    WidthRequest="200" />
+            <Label Text="Check the status of the Vision Service backend and its AI model endpoints."
+                   Style="{StaticResource Caption}"
+                   Margin="0,-8,0,8" />
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               HorizontalOptions="Center" />
+            <!-- Action card -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="SERVICE STATUS"
+                           Style="{StaticResource SectionHeading}" />
 
-            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
-                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
-                    StrokeThickness="1"
-                    StrokeShape="RoundRectangle 8"
-                    Padding="12">
-                <Label Text="{Binding ResultText}"
-                       FontFamily="Monospace"
-                       FontSize="13"
-                       LineBreakMode="WordWrap" />
+                    <Button Text="Check Health"
+                            Command="{Binding CheckHealthCommand}"
+                            IsEnabled="{Binding IsNotBusy}"
+                            Style="{StaticResource AccentButton}"
+                            HorizontalOptions="Start"
+                            WidthRequest="160" />
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       HorizontalOptions="Start"
+                                       WidthRequest="24" HeightRequest="24" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Results card -->
+            <Border Style="{StaticResource SectionCard}"
+                    IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="RESULT"
+                           Style="{StaticResource SectionHeading}" />
+                    <Label Text="{Binding ResultText}"
+                           Style="{StaticResource Mono}" />
+                </VerticalStackLayout>
             </Border>
 
         </VerticalStackLayout>

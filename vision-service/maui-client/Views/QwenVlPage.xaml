@@ -7,79 +7,125 @@
              Title="{Binding Title}">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="12" Padding="24">
+        <VerticalStackLayout Spacing="16" Padding="24,32">
 
-            <Label Text="Qwen-VL Vision Language"
+            <!-- Page heading -->
+            <Label Text="Vision Language"
                    Style="{StaticResource Headline}"
-                   HorizontalOptions="Center" />
+                   HorizontalOptions="Start" />
 
-            <!-- Image A picker -->
-            <Label Text="Image A" FontAttributes="Bold" />
-            <Button Text="Pick Image A"
-                    Command="{Binding PickImageCommand}"
-                    HorizontalOptions="Start"
-                    WidthRequest="160" />
-            <Image Source="{Binding PreviewImage}"
-                   HeightRequest="160"
-                   Aspect="AspectFit"
-                   IsVisible="{Binding PreviewImage, Converter={StaticResource NullToBoolConverter}}" />
+            <Label Text="Use Qwen-VL to caption, question, OCR, analyse, or compare images with natural language."
+                   Style="{StaticResource Caption}"
+                   Margin="0,-8,0,8" />
 
-            <!-- Question -->
-            <Label Text="Question (for Ask):" />
-            <Entry Text="{Binding Question}"
-                   Placeholder="e.g. What objects are visible?"
-                   ClearButtonVisibility="WhileEditing" />
+            <!-- ─── Image A ──────────────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="IMAGE A"
+                           Style="{StaticResource SectionHeading}" />
 
-            <!-- System Prompt -->
-            <Label Text="System prompt (for Analyze):" />
-            <Editor Text="{Binding SystemPrompt}"
-                    Placeholder="e.g. You are a safety inspector. Describe any hazards."
-                    HeightRequest="72"
-                    AutoSize="TextChanges" />
+                    <Button Text="Select Image"
+                            Command="{Binding PickImageCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            HorizontalOptions="Start"
+                            WidthRequest="160" />
 
-            <!-- Action buttons row 1 -->
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
-                <Button Grid.Column="0" Text="Caption"
-                        Command="{Binding CaptionCommand}" />
-                <Button Grid.Column="1" Text="Ask"
-                        Command="{Binding AskCommand}" />
-                <Button Grid.Column="2" Text="OCR"
-                        Command="{Binding OcrCommand}" />
-            </Grid>
+                    <Border StrokeShape="RoundRectangle 4"
+                            HeightRequest="180"
+                            Padding="0"
+                            IsVisible="{Binding PreviewImage, Converter={StaticResource NullToBoolConverter}}">
+                        <Image Source="{Binding PreviewImage}"
+                               Aspect="AspectFit" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
 
-            <!-- Action buttons row 2 -->
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
-                <Button Grid.Column="0" Text="Analyze"
-                        Command="{Binding AnalyzeCommand}" />
-                <Button Grid.Column="1" Text="Describe"
-                        Command="{Binding DescribeDetailedCommand}" />
-                <Button Grid.Column="2" Text="Compare"
-                        Command="{Binding CompareCommand}" />
-            </Grid>
+            <!-- ─── Query Configuration ──────────────────────── -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="QUERY"
+                           Style="{StaticResource SectionHeading}" />
 
-            <!-- Image B picker (Compare) -->
-            <Label Text="Image B (for Compare only)" FontAttributes="Italic" FontSize="12" />
-            <Button Text="Pick Image B"
-                    Command="{Binding PickImageBCommand}"
-                    HorizontalOptions="Start"
-                    WidthRequest="160" />
-            <Image Source="{Binding PreviewImageB}"
-                   HeightRequest="120"
-                   Aspect="AspectFit"
-                   IsVisible="{Binding PreviewImageB, Converter={StaticResource NullToBoolConverter}}" />
+                    <Label Text="Question"
+                           Style="{StaticResource FormLabel}" />
+                    <Entry Text="{Binding Question}"
+                           Placeholder="e.g. What objects are visible?"
+                           ClearButtonVisibility="WhileEditing" />
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               HorizontalOptions="Center" />
+                    <Label Text="System prompt"
+                           Style="{StaticResource FormLabel}" />
+                    <Editor Text="{Binding SystemPrompt}"
+                            Placeholder="e.g. You are a safety inspector. Describe any hazards."
+                            HeightRequest="72"
+                            AutoSize="TextChanges" />
+                </VerticalStackLayout>
+            </Border>
 
-            <Border IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
-                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}"
-                    StrokeThickness="1"
-                    StrokeShape="RoundRectangle 8"
-                    Padding="12">
-                <Label Text="{Binding ResultText}"
-                       FontSize="13"
-                       LineBreakMode="WordWrap" />
+            <!-- ─── Actions ──────────────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="ACTIONS"
+                           Style="{StaticResource SectionHeading}" />
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                        <Button Grid.Column="0" Text="Caption"
+                                Command="{Binding CaptionCommand}"
+                                Style="{StaticResource AccentButton}" />
+                        <Button Grid.Column="1" Text="Ask"
+                                Command="{Binding AskCommand}" />
+                        <Button Grid.Column="2" Text="OCR"
+                                Command="{Binding OcrCommand}" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                        <Button Grid.Column="0" Text="Analyse"
+                                Command="{Binding AnalyzeCommand}" />
+                        <Button Grid.Column="1" Text="Describe"
+                                Command="{Binding DescribeDetailedCommand}" />
+                        <Button Grid.Column="2" Text="Compare"
+                                Command="{Binding CompareCommand}" />
+                    </Grid>
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       HorizontalOptions="Start"
+                                       WidthRequest="24" HeightRequest="24" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ─── Image B (Compare) ────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="IMAGE B  (COMPARE)"
+                           Style="{StaticResource SectionHeading}" />
+
+                    <Button Text="Select Image B"
+                            Command="{Binding PickImageBCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            HorizontalOptions="Start"
+                            WidthRequest="160" />
+
+                    <Border StrokeShape="RoundRectangle 4"
+                            HeightRequest="140"
+                            Padding="0"
+                            IsVisible="{Binding PreviewImageB, Converter={StaticResource NullToBoolConverter}}">
+                        <Image Source="{Binding PreviewImageB}"
+                               Aspect="AspectFit" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ─── Results ──────────────────────────────────── -->
+            <Border Style="{StaticResource SectionCard}"
+                    IsVisible="{Binding ResultText, Converter={StaticResource StringNotEmptyConverter}}"
+                    Stroke="{Binding HasError, Converter={StaticResource BoolToColorConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="RESULT"
+                           Style="{StaticResource SectionHeading}" />
+                    <Label Text="{Binding ResultText}"
+                           FontSize="13"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
             </Border>
 
         </VerticalStackLayout>
