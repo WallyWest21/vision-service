@@ -47,7 +47,9 @@ public class ImageCleanupJob : BackgroundService
         {
             // Expected when the host signals shutdown
         }
-
-        _logger.LogInformation("Job stopping due to shutdown");
+        finally
+        {
+            _logger.LogInformation("Job stopping due to shutdown");
+        }
     }
 }

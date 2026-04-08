@@ -16,18 +16,32 @@ namespace VisionService.Tests.Jobs;
 internal sealed class CapturingLogger<T> : ILogger<T>
 {
     private readonly List<string> _messages = [];
-    public IReadOnlyList<string> Messages => _messages;
+    private readonly object _lock = new();
+
+    /// <summary>Returns a snapshot of all captured messages taken under a lock.</summary>
+    public IReadOnlyList<string> Messages
+    {
+        get { lock (_lock) { return _messages.ToList(); } }
+    }
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
     public bool IsEnabled(LogLevel logLevel) => true;
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
         Exception? exception, Func<TState, Exception?, string> formatter)
-        => _messages.Add(formatter(state, exception));
+    {
+        lock (_lock) { _messages.Add(formatter(state, exception)); }
+    }
 }
 
 public class ImageCleanupJobShutdownTests
 {
+    private sealed class Wrapper(IServiceScopeFactory f, ILogger<ImageCleanupJob> l, IOptionsMonitor<PerformanceOptions> o)
+        : ImageCleanupJob(f, l, o)
+    {
+        public Task InvokeExecuteAsync(CancellationToken ct) => ExecuteAsync(ct);
+    }
+
     [Fact]
     public async Task ExecuteAsync_WhenStopped_LogsShutdownMessage()
     {
@@ -36,17 +50,18 @@ public class ImageCleanupJobShutdownTests
         monitor.CurrentValue.Returns(new PerformanceOptions { ImageCleanupIntervalHours = 1 });
 
         var imageService = Substitute.For<IImageService>();
-        imageService.CleanupExpiredAsync(Arg.Any<CancellationToken>()).Returns(0);
+        imageService.CleanupExpiredAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(0));
 
         var services = new ServiceCollection();
         services.AddSingleton<IImageService>(imageService);
         var serviceProvider = services.BuildServiceProvider();
         var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
 
-        var job = new ImageCleanupJob(scopeFactory, logger, monitor);
+        var job = new Wrapper(scopeFactory, logger, monitor);
 
-        await job.StartAsync(CancellationToken.None);
-        await job.StopAsync(CancellationToken.None);
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        await job.InvokeExecuteAsync(cts.Token);
 
         logger.Messages.Should().Contain(m => m.Contains("Job stopping due to shutdown"));
     }
@@ -54,6 +69,12 @@ public class ImageCleanupJobShutdownTests
 
 public class ModelHealthCheckJobShutdownTests
 {
+    private sealed class Wrapper(IServiceScopeFactory f, ILogger<ModelHealthCheckJob> l, IOptionsMonitor<PerformanceOptions> o)
+        : ModelHealthCheckJob(f, l, o)
+    {
+        public Task InvokeExecuteAsync(CancellationToken ct) => ExecuteAsync(ct);
+    }
+
     [Fact]
     public async Task ExecuteAsync_WhenStopped_LogsShutdownMessage()
     {
@@ -62,10 +83,10 @@ public class ModelHealthCheckJobShutdownTests
         monitor.CurrentValue.Returns(new PerformanceOptions { HealthCheckIntervalSeconds = 30 });
 
         var yolo = Substitute.For<IYoloClient>();
-        yolo.IsHealthyAsync(Arg.Any<CancellationToken>()).Returns(true);
+        yolo.IsHealthyAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(true));
 
         var qwen = Substitute.For<IQwenVlClient>();
-        qwen.IsHealthyAsync(Arg.Any<CancellationToken>()).Returns(true);
+        qwen.IsHealthyAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(true));
 
         var eventBus = Substitute.For<IVisionEventBus>();
 
@@ -76,10 +97,11 @@ public class ModelHealthCheckJobShutdownTests
         var serviceProvider = services.BuildServiceProvider();
         var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
 
-        var job = new ModelHealthCheckJob(scopeFactory, logger, monitor);
+        var job = new Wrapper(scopeFactory, logger, monitor);
 
-        await job.StartAsync(CancellationToken.None);
-        await job.StopAsync(CancellationToken.None);
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        await job.InvokeExecuteAsync(cts.Token);
 
         logger.Messages.Should().Contain(m => m.Contains("Job stopping due to shutdown"));
     }

@@ -42,15 +42,17 @@ public class ModelHealthCheckJob : BackgroundService
                 _qwenWasHealthy = await CheckBackendAsync("QwenVL", () => qwen.IsHealthyAsync(stoppingToken),
                     _qwenWasHealthy, eventBus, stoppingToken);
 
-                await Task.Delay(TimeSpan.FromSeconds(_perfOptions.CurrentValue.HealthCheckIntervalSeconds), stoppingToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(_perfOptions.CurrentValue.HealthCheckIntervalSeconds), stoppingToken);
             }
         }
         catch (OperationCanceledException)
         {
             // Expected when the host signals shutdown
         }
-
-        _logger.LogInformation("Job stopping due to shutdown");
+        finally
+        {
+            _logger.LogInformation("Job stopping due to shutdown");
+        }
     }
 
     private async Task<bool> CheckBackendAsync(string name, Func<Task<bool>> check,
@@ -73,7 +75,7 @@ public class ModelHealthCheckJob : BackgroundService
             }
             return wasHealthy;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Error checking {Backend} backend health", name);
             return wasHealthy;
