@@ -47,7 +47,10 @@ public static class WebSocketEndpoints
             if (entry is null)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsJsonAsync(new { Error = "API key required or invalid" });
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    Error = "API key required or invalid"
+                });
                 return;
             }
         }
@@ -56,7 +59,10 @@ public static class WebSocketEndpoints
         if (!await connectionLimit.WaitAsync(0))
         {
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-            await context.Response.WriteAsJsonAsync(new { Error = "WebSocket connection limit reached" });
+            await context.Response.WriteAsJsonAsync(new
+            {
+                Error = "WebSocket connection limit reached"
+            });
             return;
         }
 
@@ -87,7 +93,8 @@ public static class WebSocketEndpoints
                     do
                     {
                         result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), token);
-                        if (result.MessageType == WebSocketMessageType.Close) break;
+                        if (result.MessageType == WebSocketMessageType.Close)
+                            break;
                         ms.Write(buffer, 0, result.Count);
                     } while (!result.EndOfMessage);
                 }
@@ -107,7 +114,8 @@ public static class WebSocketEndpoints
                     break;
                 }
 
-                if (result.MessageType != WebSocketMessageType.Binary) continue;
+                if (result.MessageType != WebSocketMessageType.Binary)
+                    continue;
 
                 ms.Position = 0;
                 object? response = null;
@@ -117,17 +125,28 @@ public static class WebSocketEndpoints
                     if (mode == "caption")
                     {
                         var vlResponse = await qwen.CaptionAsync(ms, token);
-                        response = new { Mode = "caption", Result = vlResponse.Text };
+                        response = new
+                        {
+                            Mode = "caption",
+                            Result = vlResponse.Text
+                        };
                     }
                     else
                     {
                         var detections = await yolo.DetectAsync(ms, ct: token);
-                        response = new { Mode = "detect", Detections = detections };
+                        response = new
+                        {
+                            Mode = "detect",
+                            Detections = detections
+                        };
                     }
                 }
                 catch (Exception ex)
                 {
-                    response = new { Error = ex.Message };
+                    response = new
+                    {
+                        Error = ex.Message
+                    };
                 }
 
                 var json = JsonSerializer.Serialize(response, JsonOpts);

@@ -65,7 +65,9 @@ public class FileValidationServiceTests
         // 2 MB file — exceeds 1 MB limit
         var content = new byte[2 * 1024 * 1024];
         // Set JPEG magic bytes so that extension passes
-        content[0] = 0xFF; content[1] = 0xD8; content[2] = 0xFF;
+        content[0] = 0xFF;
+        content[1] = 0xD8;
+        content[2] = 0xFF;
         var file = CreateFormFile("big.jpg", content);
 
         var result = await service.ValidateAsync(file);
@@ -107,8 +109,14 @@ public class FileValidationServiceTests
         var service = CreateService();
         // WebP: RIFF at offset 0 (bytes 0-3) + 'WEBP' at offset 8 (bytes 8-11)
         var content = new byte[12];
-        content[0] = 0x52; content[1] = 0x49; content[2] = 0x46; content[3] = 0x46; // RIFF
-        content[8] = 0x57; content[9] = 0x45; content[10] = 0x42; content[11] = 0x50; // WEBP
+        content[0] = 0x52;
+        content[1] = 0x49;
+        content[2] = 0x46;
+        content[3] = 0x46; // RIFF
+        content[8] = 0x57;
+        content[9] = 0x45;
+        content[10] = 0x42;
+        content[11] = 0x50; // WEBP
         var file = CreateFormFile("image.webp", content);
 
         var result = await service.ValidateAsync(file);

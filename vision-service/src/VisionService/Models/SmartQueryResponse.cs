@@ -13,10 +13,16 @@ public class SmartQueryResponse
     public string VlAnalysis { get; set; } = string.Empty;
 
     /// <summary>Total number of objects detected by YOLO.</summary>
-    public int TotalDetections { get; set; }
+    public int TotalDetections
+    {
+        get; set;
+    }
 
     /// <summary>Combined processing time (YOLO + Qwen-VL) in milliseconds.</summary>
-    public double ProcessingTimeMs { get; set; }
+    public double ProcessingTimeMs
+    {
+        get; set;
+    }
 
     /// <summary>Name of the YOLO model used for detection.</summary>
     public string YoloModel { get; set; } = string.Empty;

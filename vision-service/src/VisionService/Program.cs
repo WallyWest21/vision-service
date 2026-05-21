@@ -30,7 +30,11 @@ builder.Host.UseSerilog((context, config) => config
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "VisionService API", Version = "v1" });
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "VisionService API",
+        Version = "v1"
+    });
     c.AddSecurityDefinition("ApiKey", new()
     {
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
@@ -153,4 +157,6 @@ app.MapPlaygroundEndpoints();
 app.Run();
 
 /// <summary>Entry point for integration tests.</summary>
-public partial class Program { }
+public partial class Program
+{
+}

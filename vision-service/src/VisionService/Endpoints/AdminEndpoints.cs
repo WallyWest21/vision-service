@@ -64,7 +64,12 @@ public static class AdminEndpoints
         existing.Add(entry);
         auth.Value.ApiKeys = [.. existing];
 
-        return Results.Ok(new { key, entry.Name, entry.Scopes });
+        return Results.Ok(new
+        {
+            key,
+            entry.Name,
+            entry.Scopes
+        });
     }
 
     private static IResult GetSettingsAsync(
@@ -130,51 +135,71 @@ public static class AdminEndpoints
         // Apply rate limit changes
         if (dto.RateLimit is { } rl)
         {
-            if (rl.RequestsPerMinute.HasValue) rateLimit.CurrentValue.RequestsPerMinute = rl.RequestsPerMinute.Value;
-            if (rl.BurstSize.HasValue) rateLimit.CurrentValue.BurstSize = rl.BurstSize.Value;
+            if (rl.RequestsPerMinute.HasValue)
+                rateLimit.CurrentValue.RequestsPerMinute = rl.RequestsPerMinute.Value;
+            if (rl.BurstSize.HasValue)
+                rateLimit.CurrentValue.BurstSize = rl.BurstSize.Value;
         }
 
         // Apply cache changes
         if (dto.Cache is { } c)
         {
-            if (c.Enabled.HasValue) cache.CurrentValue.Enabled = c.Enabled.Value;
-            if (c.DefaultTtlSeconds.HasValue) cache.CurrentValue.DefaultTtlSeconds = c.DefaultTtlSeconds.Value;
-            if (c.MaxItems.HasValue) cache.CurrentValue.MaxItems = c.MaxItems.Value;
+            if (c.Enabled.HasValue)
+                cache.CurrentValue.Enabled = c.Enabled.Value;
+            if (c.DefaultTtlSeconds.HasValue)
+                cache.CurrentValue.DefaultTtlSeconds = c.DefaultTtlSeconds.Value;
+            if (c.MaxItems.HasValue)
+                cache.CurrentValue.MaxItems = c.MaxItems.Value;
         }
 
         // Apply performance changes
         if (dto.Performance is { } p)
         {
-            if (p.MinAiIntervalMs.HasValue) performance.CurrentValue.MinAiIntervalMs = p.MinAiIntervalMs.Value;
-            if (p.MaxWebSocketFrameBytes.HasValue) performance.CurrentValue.MaxWebSocketFrameBytes = p.MaxWebSocketFrameBytes.Value;
-            if (p.HealthCheckIntervalSeconds.HasValue) performance.CurrentValue.HealthCheckIntervalSeconds = p.HealthCheckIntervalSeconds.Value;
-            if (p.ImageCleanupIntervalHours.HasValue) performance.CurrentValue.ImageCleanupIntervalHours = p.ImageCleanupIntervalHours.Value;
-            if (p.MaxConcurrentAiRequests.HasValue) performance.CurrentValue.MaxConcurrentAiRequests = p.MaxConcurrentAiRequests.Value;
+            if (p.MinAiIntervalMs.HasValue)
+                performance.CurrentValue.MinAiIntervalMs = p.MinAiIntervalMs.Value;
+            if (p.MaxWebSocketFrameBytes.HasValue)
+                performance.CurrentValue.MaxWebSocketFrameBytes = p.MaxWebSocketFrameBytes.Value;
+            if (p.HealthCheckIntervalSeconds.HasValue)
+                performance.CurrentValue.HealthCheckIntervalSeconds = p.HealthCheckIntervalSeconds.Value;
+            if (p.ImageCleanupIntervalHours.HasValue)
+                performance.CurrentValue.ImageCleanupIntervalHours = p.ImageCleanupIntervalHours.Value;
+            if (p.MaxConcurrentAiRequests.HasValue)
+                performance.CurrentValue.MaxConcurrentAiRequests = p.MaxConcurrentAiRequests.Value;
         }
 
         // Apply YOLO changes
         if (dto.Yolo is { } y)
         {
-            if (y.TimeoutSeconds.HasValue) yolo.CurrentValue.TimeoutSeconds = y.TimeoutSeconds.Value;
-            if (y.MaxRetries.HasValue) yolo.CurrentValue.MaxRetries = y.MaxRetries.Value;
+            if (y.TimeoutSeconds.HasValue)
+                yolo.CurrentValue.TimeoutSeconds = y.TimeoutSeconds.Value;
+            if (y.MaxRetries.HasValue)
+                yolo.CurrentValue.MaxRetries = y.MaxRetries.Value;
         }
 
         // Apply QwenVl changes
         if (dto.QwenVl is { } q)
         {
-            if (q.MaxTokens.HasValue) qwenVl.CurrentValue.MaxTokens = q.MaxTokens.Value;
-            if (q.Temperature.HasValue) qwenVl.CurrentValue.Temperature = q.Temperature.Value;
-            if (q.TimeoutSeconds.HasValue) qwenVl.CurrentValue.TimeoutSeconds = q.TimeoutSeconds.Value;
+            if (q.MaxTokens.HasValue)
+                qwenVl.CurrentValue.MaxTokens = q.MaxTokens.Value;
+            if (q.Temperature.HasValue)
+                qwenVl.CurrentValue.Temperature = q.Temperature.Value;
+            if (q.TimeoutSeconds.HasValue)
+                qwenVl.CurrentValue.TimeoutSeconds = q.TimeoutSeconds.Value;
         }
 
         // Apply storage changes
         if (dto.Storage is { } s)
         {
-            if (s.RetentionDays.HasValue) storage.CurrentValue.RetentionDays = s.RetentionDays.Value;
-            if (s.MaxFileSizeMb.HasValue) storage.CurrentValue.MaxFileSizeMb = s.MaxFileSizeMb.Value;
+            if (s.RetentionDays.HasValue)
+                storage.CurrentValue.RetentionDays = s.RetentionDays.Value;
+            if (s.MaxFileSizeMb.HasValue)
+                storage.CurrentValue.MaxFileSizeMb = s.MaxFileSizeMb.Value;
         }
 
-        return Results.Ok(new { Message = "Settings updated. Changes take effect immediately for most settings." });
+        return Results.Ok(new
+        {
+            Message = "Settings updated. Changes take effect immediately for most settings."
+        });
     }
 }
 
@@ -185,7 +210,10 @@ public class NewApiKeyRequest
     public string Name { get; set; } = string.Empty;
 
     /// <summary>Scopes to assign: detect, analyze, admin, stream.</summary>
-    public string[]? Scopes { get; set; }
+    public string[]? Scopes
+    {
+        get; set;
+    }
 
     /// <summary>Per-minute rate limit override for this key (0 = use default).</summary>
     public int RequestsPerMinute { get; set; } = 0;

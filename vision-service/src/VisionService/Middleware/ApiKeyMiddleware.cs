@@ -31,7 +31,10 @@ public class ApiKeyMiddleware
         if (!context.Request.Headers.TryGetValue(ApiKeyHeader, out var providedKey))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new { Error = "API key required" });
+            await context.Response.WriteAsJsonAsync(new
+            {
+                Error = "API key required"
+            });
             return;
         }
 
@@ -39,7 +42,10 @@ public class ApiKeyMiddleware
         if (entry is null)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new { Error = "Invalid API key" });
+            await context.Response.WriteAsJsonAsync(new
+            {
+                Error = "Invalid API key"
+            });
             return;
         }
 

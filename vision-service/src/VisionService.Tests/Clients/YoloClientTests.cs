@@ -23,7 +23,10 @@ public class YoloClientTests
     public async Task DetectAsync_SuccessResponse_ReturnsDetections()
     {
         var detections = new[] { new Detection { Label = "person", Confidence = 0.9f } };
-        var responseBody = JsonSerializer.Serialize(new { Detections = detections });
+        var responseBody = JsonSerializer.Serialize(new
+        {
+            Detections = detections
+        });
 
         var handler = new FakeHttpMessageHandler(HttpStatusCode.OK, responseBody);
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("http://test") };

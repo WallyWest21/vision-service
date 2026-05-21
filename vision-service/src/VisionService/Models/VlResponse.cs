@@ -10,10 +10,16 @@ public class VlResponse
     public string Model { get; set; } = string.Empty;
 
     /// <summary>Number of input tokens consumed.</summary>
-    public int PromptTokens { get; set; }
+    public int PromptTokens
+    {
+        get; set;
+    }
 
     /// <summary>Number of output tokens generated.</summary>
-    public int CompletionTokens { get; set; }
+    public int CompletionTokens
+    {
+        get; set;
+    }
 
     /// <summary>Total tokens used.</summary>
     public int TotalTokens => PromptTokens + CompletionTokens;

@@ -7,8 +7,14 @@ public class ClassificationResult
     public string Label { get; set; } = string.Empty;
 
     /// <summary>Confidence score (0–1).</summary>
-    public float Confidence { get; set; }
+    public float Confidence
+    {
+        get; set;
+    }
 
     /// <summary>Class ID.</summary>
-    public int ClassId { get; set; }
+    public int ClassId
+    {
+        get; set;
+    }
 }

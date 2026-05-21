@@ -86,7 +86,8 @@ public class RateLimitMiddleware
             lock (_lock)
             {
                 Refill();
-                if (_tokens < 1.0) return false;
+                if (_tokens < 1.0)
+                    return false;
                 _tokens -= 1.0;
                 return true;
             }

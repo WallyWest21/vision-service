@@ -22,5 +22,8 @@ public interface IResponseCacheService
     Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? ttl = null);
 
     /// <summary>Returns true when the cache is enabled.</summary>
-    bool IsEnabled { get; }
+    bool IsEnabled
+    {
+        get;
+    }
 }

@@ -195,9 +195,11 @@ public static class QwenVlEndpoints
         try
         {
             var v1 = await fileValidator.ValidateAsync(file1, ct);
-            if (!v1.IsValid) return Results.Problem(v1.ErrorMessage, statusCode: 400);
+            if (!v1.IsValid)
+                return Results.Problem(v1.ErrorMessage, statusCode: 400);
             var v2 = await fileValidator.ValidateAsync(file2, ct);
-            if (!v2.IsValid) return Results.Problem(v2.ErrorMessage, statusCode: 400);
+            if (!v2.IsValid)
+                return Results.Problem(v2.ErrorMessage, statusCode: 400);
 
             var bytes1 = await ReadBytesAsync(file1, ct);
             var bytes2 = await ReadBytesAsync(file2, ct);

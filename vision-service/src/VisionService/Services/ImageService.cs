@@ -71,7 +71,8 @@ public class ImageService : IImageService
     /// <inheritdoc/>
     public async Task<string> ConvertToBase64Async(Stream image, CancellationToken ct = default)
     {
-        if (image.CanSeek) image.Position = 0;
+        if (image.CanSeek)
+            image.Position = 0;
         using var ms = new MemoryStream();
         await image.CopyToAsync(ms, ct);
         return Convert.ToBase64String(ms.ToArray());
@@ -82,7 +83,8 @@ public class ImageService : IImageService
     {
         var cutoff = DateTime.UtcNow.AddDays(-_options.RetentionDays);
         var deleted = 0;
-        if (!Directory.Exists(_options.ImageStoragePath)) return Task.FromResult(0);
+        if (!Directory.Exists(_options.ImageStoragePath))
+            return Task.FromResult(0);
 
         foreach (var file in Directory.EnumerateFiles(_options.ImageStoragePath, "*", SearchOption.AllDirectories))
         {
@@ -111,7 +113,8 @@ public class ImageService : IImageService
 
     private string? FindImagePath(string imageId)
     {
-        if (!Directory.Exists(_options.ImageStoragePath)) return null;
+        if (!Directory.Exists(_options.ImageStoragePath))
+            return null;
         return Directory.EnumerateFiles(_options.ImageStoragePath, $"{imageId}.*", SearchOption.AllDirectories).FirstOrDefault();
     }
 }

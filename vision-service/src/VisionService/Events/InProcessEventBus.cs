@@ -17,7 +17,8 @@ public class InProcessEventBus : IVisionEventBus
     /// <inheritdoc/>
     public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken ct = default) where TEvent : class
     {
-        if (!_handlers.TryGetValue(typeof(TEvent), out var entry)) return;
+        if (!_handlers.TryGetValue(typeof(TEvent), out var entry))
+            return;
 
         foreach (var handler in entry.Handlers)
         {

@@ -7,13 +7,22 @@ public class Keypoint
     public string Name { get; set; } = string.Empty;
 
     /// <summary>X coordinate in pixels.</summary>
-    public float X { get; set; }
+    public float X
+    {
+        get; set;
+    }
 
     /// <summary>Y coordinate in pixels.</summary>
-    public float Y { get; set; }
+    public float Y
+    {
+        get; set;
+    }
 
     /// <summary>Visibility/confidence score (0–1).</summary>
-    public float Confidence { get; set; }
+    public float Confidence
+    {
+        get; set;
+    }
 }
 
 /// <summary>Full pose estimation result for one person.</summary>
@@ -23,7 +32,10 @@ public class PoseResult
     public BoundingBox BoundingBox { get; set; } = new();
 
     /// <summary>Detection confidence score (0–1).</summary>
-    public float Confidence { get; set; }
+    public float Confidence
+    {
+        get; set;
+    }
 
     /// <summary>Keypoints for this person.</summary>
     public List<Keypoint> Keypoints { get; set; } = [];

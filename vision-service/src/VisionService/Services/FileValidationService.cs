@@ -12,13 +12,13 @@ public sealed class FileValidationService : IFileValidationService
     private static readonly Dictionary<string, (int Offset, byte[] Bytes)[][]> MagicSignatures =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            [".jpg"]  = [[(0, new byte[] { 0xFF, 0xD8, 0xFF })]],
+            [".jpg"] = [[(0, new byte[] { 0xFF, 0xD8, 0xFF })]],
             [".jpeg"] = [[(0, new byte[] { 0xFF, 0xD8, 0xFF })]],
-            [".png"]  = [[(0, new byte[] { 0x89, 0x50, 0x4E, 0x47 })]],
+            [".png"] = [[(0, new byte[] { 0x89, 0x50, 0x4E, 0x47 })]],
             // WebP: RIFF at offset 0 AND 'WEBP' at offset 8
             [".webp"] = [[(0, new byte[] { 0x52, 0x49, 0x46, 0x46 }), (8, new byte[] { 0x57, 0x45, 0x42, 0x50 })]],
-            [".bmp"]  = [[(0, new byte[] { 0x42, 0x4D })]],
-            [".gif"]  = [[(0, new byte[] { 0x47, 0x49, 0x46, 0x38 })]],
+            [".bmp"] = [[(0, new byte[] { 0x42, 0x4D })]],
+            [".gif"] = [[(0, new byte[] { 0x47, 0x49, 0x46, 0x38 })]],
         };
 
     private readonly StorageOptions _options;

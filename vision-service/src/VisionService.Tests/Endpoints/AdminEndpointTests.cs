@@ -26,7 +26,12 @@ public class AdminEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task AddKey_WithValidName_ReturnsOkWithKey()
     {
-        var body = new { name = "test-key", scopes = new[] { "detect", "analyze" }, requestsPerMinute = 30 };
+        var body = new
+        {
+            name = "test-key",
+            scopes = new[] { "detect", "analyze" },
+            requestsPerMinute = 30
+        };
 
         var response = await _client.PostAsJsonAsync("/api/v1/admin/keys", body);
 
@@ -39,7 +44,12 @@ public class AdminEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task AddKey_WithEmptyName_ReturnsBadRequest()
     {
-        var body = new { name = "", scopes = Array.Empty<string>(), requestsPerMinute = 0 };
+        var body = new
+        {
+            name = "",
+            scopes = Array.Empty<string>(),
+            requestsPerMinute = 0
+        };
 
         var response = await _client.PostAsJsonAsync("/api/v1/admin/keys", body);
 
@@ -63,8 +73,17 @@ public class AdminEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     {
         var body = new
         {
-            rateLimit = new { requestsPerMinute = 120, burstSize = 20 },
-            cache = new { enabled = true, defaultTtlSeconds = 60, maxItems = 500 }
+            rateLimit = new
+            {
+                requestsPerMinute = 120,
+                burstSize = 20
+            },
+            cache = new
+            {
+                enabled = true,
+                defaultTtlSeconds = 60,
+                maxItems = 500
+            }
         };
 
         var response = await _client.PutAsJsonAsync("/api/v1/admin/settings", body);

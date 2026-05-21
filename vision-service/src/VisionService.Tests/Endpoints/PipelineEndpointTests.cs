@@ -23,8 +23,10 @@ public class PipelineEndpointTests : IClassFixture<WebApplicationFactory<Program
         return _factory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services =>
             {
-                if (yolo is not null) services.AddSingleton(yolo);
-                if (qwen is not null) services.AddSingleton(qwen);
+                if (yolo is not null)
+                    services.AddSingleton(yolo);
+                if (qwen is not null)
+                    services.AddSingleton(qwen);
             }))
             .CreateClient();
     }

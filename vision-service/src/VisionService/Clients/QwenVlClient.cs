@@ -180,7 +180,8 @@ public class QwenVlClient : IQwenVlClient
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JsonOptions, ct);
-            if (result is null) throw new InvalidOperationException("Empty response from Qwen-VL");
+            if (result is null)
+                throw new InvalidOperationException("Empty response from Qwen-VL");
 
             return new VlResponse
             {
@@ -247,12 +248,20 @@ public class QwenVlClient : IQwenVlClient
     {
         [JsonPropertyName("model")] public string Model { get; set; } = string.Empty;
         [JsonPropertyName("choices")] public List<Choice> Choices { get; set; } = [];
-        [JsonPropertyName("usage")] public UsageInfo? Usage { get; set; }
+        [JsonPropertyName("usage")]
+        public UsageInfo? Usage
+        {
+            get; set;
+        }
     }
 
     private sealed class Choice
     {
-        [JsonPropertyName("message")] public AssistantMessage? Message { get; set; }
+        [JsonPropertyName("message")]
+        public AssistantMessage? Message
+        {
+            get; set;
+        }
     }
 
     private sealed class AssistantMessage
@@ -262,7 +271,15 @@ public class QwenVlClient : IQwenVlClient
 
     private sealed class UsageInfo
     {
-        [JsonPropertyName("prompt_tokens")] public int PromptTokens { get; set; }
-        [JsonPropertyName("completion_tokens")] public int CompletionTokens { get; set; }
+        [JsonPropertyName("prompt_tokens")]
+        public int PromptTokens
+        {
+            get; set;
+        }
+        [JsonPropertyName("completion_tokens")]
+        public int CompletionTokens
+        {
+            get; set;
+        }
     }
 }

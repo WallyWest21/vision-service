@@ -129,8 +129,20 @@ public class YoloClient : IYoloClient
     }
 
     // Internal response DTOs
-    private sealed class YoloDetectResponse { public List<Detection> Detections { get; set; } = []; }
-    private sealed class YoloSegmentResponse { public List<Segmentation> Segmentations { get; set; } = []; }
-    private sealed class YoloClassifyResponse { public List<ClassificationResult> Classifications { get; set; } = []; }
-    private sealed class YoloPoseResponse { public List<PoseResult> Poses { get; set; } = []; }
+    private sealed class YoloDetectResponse
+    {
+        public List<Detection> Detections { get; set; } = [];
+    }
+    private sealed class YoloSegmentResponse
+    {
+        public List<Segmentation> Segmentations { get; set; } = [];
+    }
+    private sealed class YoloClassifyResponse
+    {
+        public List<ClassificationResult> Classifications { get; set; } = [];
+    }
+    private sealed class YoloPoseResponse
+    {
+        public List<PoseResult> Poses { get; set; } = [];
+    }
 }

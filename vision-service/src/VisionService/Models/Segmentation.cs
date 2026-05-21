@@ -7,7 +7,10 @@ public class Segmentation
     public string Label { get; set; } = string.Empty;
 
     /// <summary>Detection confidence score (0–1).</summary>
-    public float Confidence { get; set; }
+    public float Confidence
+    {
+        get; set;
+    }
 
     /// <summary>Bounding box of the instance.</summary>
     public BoundingBox BoundingBox { get; set; } = new();
@@ -16,5 +19,8 @@ public class Segmentation
     public float[] Mask { get; set; } = [];
 
     /// <summary>Class ID.</summary>
-    public int ClassId { get; set; }
+    public int ClassId
+    {
+        get; set;
+    }
 }

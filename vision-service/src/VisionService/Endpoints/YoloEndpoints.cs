@@ -114,7 +114,11 @@ public static class YoloEndpoints
                 {
                     await using var stream = new MemoryStream(imageBytes);
                     var detections = await yolo.DetectAsync(stream, confidence, ct);
-                    return new { FileName = f.FileName, Detections = detections };
+                    return new
+                    {
+                        FileName = f.FileName,
+                        Detections = detections
+                    };
                 });
             });
             var results = await Task.WhenAll(tasks);
@@ -182,7 +186,8 @@ public static class YoloEndpoints
     {
         try
         {
-            if (topN < 1 || topN > 100) return Results.Problem("topN must be between 1 and 100", statusCode: 400);
+            if (topN < 1 || topN > 100)
+                return Results.Problem("topN must be between 1 and 100", statusCode: 400);
             var validation = await fileValidator.ValidateAsync(file, ct);
             if (!validation.IsValid)
                 return Results.Problem(validation.ErrorMessage, statusCode: 400);
@@ -276,7 +281,10 @@ public class DetectionResponse
     public IReadOnlyList<Detection> Detections { get; set; } = [];
 
     /// <summary>Processing time in milliseconds.</summary>
-    public long ProcessingTimeMs { get; set; }
+    public long ProcessingTimeMs
+    {
+        get; set;
+    }
 
     /// <summary>Model used for detection.</summary>
     public string Model { get; set; } = string.Empty;

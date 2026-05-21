@@ -21,7 +21,13 @@ internal sealed class CapturingLogger<T> : ILogger<T>
     /// <summary>Returns a snapshot of all captured messages taken under a lock.</summary>
     public IReadOnlyList<string> Messages
     {
-        get { lock (_lock) { return _messages.ToList(); } }
+        get
+        {
+            lock (_lock)
+            {
+                return _messages.ToList();
+            }
+        }
     }
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
@@ -30,7 +36,10 @@ internal sealed class CapturingLogger<T> : ILogger<T>
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
         Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        lock (_lock) { _messages.Add(formatter(state, exception)); }
+        lock (_lock)
+        {
+            _messages.Add(formatter(state, exception));
+        }
     }
 }
 

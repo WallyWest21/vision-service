@@ -30,7 +30,11 @@ public class QwenVlClientTests
         {
             model = "test-model",
             choices = new[] { new { message = new { content = "This is a cat." } } },
-            usage = new { prompt_tokens = 10, completion_tokens = 5 }
+            usage = new
+            {
+                prompt_tokens = 10,
+                completion_tokens = 5
+            }
         });
 
         var handler = new FakeHttpMessageHandler(HttpStatusCode.OK, responseBody);
@@ -61,7 +65,11 @@ public class QwenVlClientTests
         {
             model = "test-model",
             choices = new[] { new { message = new { content = "A sunny landscape." } } },
-            usage = new { prompt_tokens = 8, completion_tokens = 6 }
+            usage = new
+            {
+                prompt_tokens = 8,
+                completion_tokens = 6
+            }
         });
 
         var handler = new FakeHttpMessageHandler(HttpStatusCode.OK, responseBody);

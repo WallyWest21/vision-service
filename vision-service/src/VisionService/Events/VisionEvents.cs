@@ -9,7 +9,10 @@ public class DetectionCompleted
     public IReadOnlyList<Detection> Detections { get; init; } = [];
 
     /// <summary>Processing time in milliseconds.</summary>
-    public long ProcessingTimeMs { get; init; }
+    public long ProcessingTimeMs
+    {
+        get; init;
+    }
 }
 
 /// <summary>Raised when a vision-language analysis completes.</summary>

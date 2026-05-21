@@ -13,13 +13,22 @@ public class ImageMetadata
     public string Extension { get; set; } = string.Empty;
 
     /// <summary>File size in bytes.</summary>
-    public long FileSizeBytes { get; set; }
+    public long FileSizeBytes
+    {
+        get; set;
+    }
 
     /// <summary>Image width in pixels.</summary>
-    public int Width { get; set; }
+    public int Width
+    {
+        get; set;
+    }
 
     /// <summary>Image height in pixels.</summary>
-    public int Height { get; set; }
+    public int Height
+    {
+        get; set;
+    }
 
     /// <summary>Content type (MIME type).</summary>
     public string ContentType { get; set; } = string.Empty;
