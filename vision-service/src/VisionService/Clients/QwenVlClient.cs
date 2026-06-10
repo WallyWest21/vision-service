@@ -126,6 +126,130 @@ public class QwenVlClient : IQwenVlClient
         return await SendRequestAsync(request, ct);
     }
 
+    private const string ExtractInventorySystemPrompt =
+        "You are an inventory-cataloguing vision assistant for a maker/workshop app. " +
+        "From the single image, identify the ONE primary item and return ONLY a JSON object — no prose, no markdown fences.\n" +
+        "Rules:\n" +
+        "1. Read any visible brand, model, or label text first (OCR) and use it to set `name`; put the raw text in `visibleText`. " +
+        "If no text is legible, give a generic but specific name (e.g. \"Cordless drill\").\n" +
+        "2. `category` MUST be exactly one of the allowed values provided by the user.\n" +
+        "3. `capabilities` and `limitations` are what this product can / cannot do, inferred from what you recognise — " +
+        "2–4 short bullet strings each. Do not invent specs you cannot reasonably attribute to the item.\n" +
+        "4. `quantity` = number of identical instances visible (1 if single or unsure).\n" +
+        "5. `confidence` = your 0.0–1.0 certainty in the identification. Be honest; lower it when the item is ambiguous or unlabeled.\n" +
+        "Return keys exactly: name, category, subtitle, capabilities, limitations, quantity, visibleText, confidence.";
+
+    /// <inheritdoc/>
+    public async Task<InventoryItemExtraction> ExtractInventoryItemAsync(
+        Stream image, IReadOnlyCollection<string> categories, CancellationToken ct = default)
+    {
+        using var activity = VisionActivitySource.Source.StartActivity("QwenVlClient.ExtractInventoryItem");
+        var allowed = (categories is { Count: > 0 } ? categories : DefaultCategories).ToArray();
+        var base64 = await ToBase64Async(image, ct);
+
+        var schema = new
+        {
+            type = "object",
+            properties = new Dictionary<string, object>
+            {
+                ["name"] = new { type = "string" },
+                ["category"] = new { type = "string", @enum = allowed },
+                ["subtitle"] = new { type = "string" },
+                ["capabilities"] = new { type = "array", items = new { type = "string" } },
+                ["limitations"] = new { type = "array", items = new { type = "string" } },
+                ["quantity"] = new { type = "integer", minimum = 0 },
+                ["visibleText"] = new { type = "string" },
+                ["confidence"] = new { type = "number", minimum = 0, maximum = 1 },
+            },
+            required = new[] { "name", "category", "capabilities", "limitations", "quantity", "confidence" },
+        };
+
+        var request = new ChatCompletionRequest
+        {
+            Model = _options.ModelName,
+            MaxTokens = _options.MaxTokens,
+            Temperature = 0.1, // low: this is extraction, not creative generation
+            ResponseFormat = new { type = "json_object" },
+            GuidedJson = schema, // vLLM OpenAI server: constrains output to the schema
+            Messages =
+            [
+                new ChatMessage { Role = "system", Content = [new TextContent { Text = ExtractInventorySystemPrompt }] },
+                new ChatMessage
+                {
+                    Role = "user",
+                    Content =
+                    [
+                        new ImageContent { ImageUrl = new ImageUrl { Url = $"data:image/jpeg;base64,{base64}" } },
+                        new TextContent { Text = "Allowed categories: " + string.Join(", ", allowed) + ". Catalogue the primary item." }
+                    ]
+                }
+            ]
+        };
+
+        VlResponse raw;
+        try
+        {
+            raw = await SendRequestAsync(request, ct);
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            _logger.LogError(ex, "Qwen-VL inventory extraction request failed");
+            throw;
+        }
+
+        return ParseExtraction(raw.Text, allowed);
+    }
+
+    /// <summary>Parses model output into <see cref="InventoryItemExtraction"/>, tolerating fenced/partial JSON.</summary>
+    internal static InventoryItemExtraction ParseExtraction(string content, IReadOnlyCollection<string> allowed)
+    {
+        var json = ExtractJsonObject(content);
+        if (json is not null)
+        {
+            try
+            {
+                var parsed = JsonSerializer.Deserialize<InventoryItemExtraction>(json, JsonOptions);
+                if (parsed is not null && !string.IsNullOrWhiteSpace(parsed.Name))
+                {
+                    // Defend against the model ignoring the enum constraint.
+                    if (!allowed.Contains(parsed.Category, StringComparer.OrdinalIgnoreCase))
+                        parsed.Category = string.Empty;
+                    if (parsed.Quantity < 1)
+                        parsed.Quantity = 1;
+                    parsed.RawResponse = content;
+                    // Always confirm; force review when the model is unsure or category got dropped.
+                    parsed.NeedsReview = parsed.Confidence < 0.75 || string.IsNullOrEmpty(parsed.Category);
+                    return parsed;
+                }
+            }
+            catch (JsonException)
+            {
+                // fall through to the review-fallback below
+            }
+        }
+
+        return new InventoryItemExtraction
+        {
+            Name = string.Empty,
+            Confidence = 0,
+            NeedsReview = true,
+            RawResponse = content,
+        };
+    }
+
+    private static string? ExtractJsonObject(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return null;
+        var start = content.IndexOf('{');
+        var end = content.LastIndexOf('}');
+        return start >= 0 && end > start ? content[start..(end + 1)] : null;
+    }
+
+    private static readonly string[] DefaultCategories =
+        ["Tools", "Machines", "Materials", "Consumables", "Software", "Workspace", "Transport", "Skills"];
+
     /// <inheritdoc/>
     public async Task<bool> IsHealthyAsync(CancellationToken ct = default)
     {
@@ -219,6 +343,22 @@ public class QwenVlClient : IQwenVlClient
         [JsonPropertyName("messages")] public List<ChatMessage> Messages { get; set; } = [];
         [JsonPropertyName("max_tokens")] public int MaxTokens { get; set; } = 1024;
         [JsonPropertyName("temperature")] public double Temperature { get; set; } = 0.7;
+
+        /// <summary>OpenAI-style response format hint, e.g. <c>{ "type": "json_object" }</c>. Omitted when null.</summary>
+        [JsonPropertyName("response_format")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public object? ResponseFormat
+        {
+            get; set;
+        }
+
+        /// <summary>vLLM guided-decoding JSON schema. Constrains output to a shape. Omitted when null.</summary>
+        [JsonPropertyName("guided_json")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public object? GuidedJson
+        {
+            get; set;
+        }
     }
 
     private sealed class ChatMessage

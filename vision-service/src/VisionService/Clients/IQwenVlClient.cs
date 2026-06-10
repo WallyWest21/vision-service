@@ -23,6 +23,14 @@ public interface IQwenVlClient
     /// <summary>Compares two images and describes their differences.</summary>
     Task<VlResponse> CompareAsync(Stream image1, Stream image2, CancellationToken ct = default);
 
+    /// <summary>
+    /// Extracts structured inventory fields (name, category, capabilities, …) from a single image,
+    /// constraining <c>category</c> to <paramref name="categories"/> via guided JSON decoding.
+    /// The result is a <b>draft for human confirmation</b>, never a direct inventory write.
+    /// </summary>
+    Task<InventoryItemExtraction> ExtractInventoryItemAsync(
+        Stream image, IReadOnlyCollection<string> categories, CancellationToken ct = default);
+
     /// <summary>Checks whether the Qwen-VL backend is healthy.</summary>
     Task<bool> IsHealthyAsync(CancellationToken ct = default);
 }

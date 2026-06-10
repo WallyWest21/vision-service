@@ -44,6 +44,12 @@ public static class PipelineEndpoints
             .WithOpenApi()
             .DisableAntiforgery();
 
+        group.MapPost("/extract-inventory-item", ExtractInventoryItemAsync)
+            .WithName("ExtractInventoryItem")
+            .WithSummary("Qwen-VL extracts structured inventory fields from one image (draft for confirmation)")
+            .WithOpenApi()
+            .DisableAntiforgery();
+
         return app;
     }
 
@@ -217,6 +223,53 @@ public static class PipelineEndpoints
         }
         catch (HttpRequestException ex)
         {
+            return Results.Problem("Backend unavailable: " + ex.Message, statusCode: 503);
+        }
+    }
+
+    private static async Task<IResult> ExtractInventoryItemAsync(
+        IFormFile file,
+        [Microsoft.AspNetCore.Mvc.FromForm] string? categories,
+        IYoloClient yolo,
+        IQwenVlClient qwen,
+        IFileValidationService fileValidator,
+        CancellationToken ct = default)
+    {
+        using var activity = VisionActivitySource.Source.StartActivity("Pipeline.ExtractInventoryItem");
+        try
+        {
+            var validation = await fileValidator.ValidateAsync(file, ct);
+            if (!validation.IsValid)
+                return Results.Problem(validation.ErrorMessage, statusCode: 400);
+
+            byte[] imageBytes;
+            await using (var ms = new MemoryStream())
+            {
+                await file.OpenReadStream().CopyToAsync(ms, ct);
+                imageBytes = ms.ToArray();
+            }
+
+            var allowed = (categories ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            // VLM does the identification; YOLO runs alongside only as a count/locate hint.
+            var extractTask = qwen.ExtractInventoryItemAsync(new MemoryStream(imageBytes), allowed, ct);
+            var detectTask = yolo.DetectAsync(new MemoryStream(imageBytes), ct: ct);
+            await Task.WhenAll(extractTask, detectTask);
+
+            var item = await extractTask;
+            var detections = await detectTask;
+
+            return Results.Ok(new
+            {
+                Item = item,
+                DetectionHints = detections.Select(d => d.Label).Distinct().ToList(),
+                DetectionCount = detections.Count
+            });
+        }
+        catch (HttpRequestException ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             return Results.Problem("Backend unavailable: " + ex.Message, statusCode: 503);
         }
     }
