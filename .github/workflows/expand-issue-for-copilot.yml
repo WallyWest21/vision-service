@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Expand issue description and assign to Copilot
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
